@@ -1,10 +1,12 @@
 import {MongoClient} from "mongodb";
+import {config, MONGO_DB_NAME} from "./config";
 
 
-const client = new MongoClient('mongodb://127.0.0.1:27017');
+const client = new MongoClient(`${config.mongo.url}${config.server.port}`);
 
 client.connect();
 
-export const db = client.db("blogDB");
+export const db = client.db(`${MONGO_DB_NAME}`);
 
-export const posts = db.collection("posts");
+export const postsDB = db.collection("posts");
+export const usersDB = db.collection("users");
