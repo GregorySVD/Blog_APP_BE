@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    //you need to define data types if it is = true
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    //use sourceMap; what in JS = TypeScript; for example show mistakes in TS
+    "target": "ES6",
+    //target version of JS that will be compiled
+    "downlevelIteration": true,
+    //for modern loops like: for of
+    "lib": [
+      "es6"
+    ],
+    //environment we are using
+    "outDir": "dist",
+    //directory where we want to transpile files
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    //we will use node module
+    "esModuleInterop": true,
+    "module": "CommonJS",
+    "allowImportingTsExtensions": true
+  }
+}
