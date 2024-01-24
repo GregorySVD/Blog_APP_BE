@@ -9,7 +9,7 @@ const client = new MongoClient(`${config.mongo.url}${config.server.port}`);
 client.connect();
 
 
-export const UserModel = mongoose.model('users', UserSchema)
+export const UserModel = mongoose.model('users', UserSchema);
 
 export const db = client.db(`${MONGO_DB_NAME}`);
 

@@ -1,5 +1,5 @@
-import {UserEntity} from "../types";
 import {ObjectId} from "mongodb";
+import {UserEntity, UserPublic} from "../types";
 import {UserModel, usersDB} from "../utils/mongodb";
 import {emailValidator, passwordValidator, usernameValidator} from "../types/models/user.schema";
 
@@ -20,10 +20,10 @@ export class UserRecord implements UserEntity {
         this.updatedAt = user.updatedAt;
     }
 
-    //@TODO create metod to find user by ID and username
+    // @TODO create metod to find user by ID and username
     async insert(): Promise<string> {
-        try {
-            //@TODO check if username and email are unique
+
+            // @TODO check if username and email are unique
             const userModel = new UserModel({
                 _id: this._id,
                 username: this.username,
@@ -33,13 +33,24 @@ export class UserRecord implements UserEntity {
                 updatedAt: this.updatedAt,
             });
             if (!passwordValidator(this.password) || !emailValidator(this.email) || !usernameValidator(this.username))
-               new Error("Invalid data");
+               throw new Error("Invalid data");
 
             await usersDB.insertOne(userModel);
             return userModel._id.toString();
 
-        } catch (err) {
-            throw err;
-        }
+    }
+
+    static async getUserByUsername(username: string): Promise<UserPublic | null> {
+        const userModel = await usersDB.findOne({username});
+        if (!userModel) return null;
+
+        return {
+            username: userModel.username,
+            email: userModel.email,
+            createdAt: userModel.createdAt,
+            updatedAt: userModel.updatedAt,
+            _id: userModel._id,
+        };
+
     }
 }

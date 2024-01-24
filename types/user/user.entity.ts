@@ -10,6 +10,3 @@ export interface UserEntity {
     createdAt?: Date;
     updatedAt?: Date;
 }
-
-// export interface UserEntityDocument extends UserEntity, Document {}
-// export interface UserEntityModel extends Model<UserEntityDocument> {}
