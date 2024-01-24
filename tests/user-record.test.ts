@@ -66,3 +66,19 @@ test("Not founded user record by username returns null", async () => {
     const foundedUser = await UserRecord.getUserByUsername("nullish");
     expect(foundedUser).toBeNull();
 });
+test("Can find single user record by email", async () => {
+    const foundedUser = await UserRecord.getUserByEmail("email@example.com");
+    expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
+});
+test("Not founded user record by email returns null", async () => {
+    const foundedUser = await UserRecord.getUserByEmail("nullish");
+    expect(foundedUser).toBeNull();
+});
+test("Can find single user record by _id", async () => {
+    const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad29");
+    expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
+});
+test("Not founded user record by _id returns null", async () => {
+    const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad22");
+    expect(foundedUser).toBeNull();
+});
