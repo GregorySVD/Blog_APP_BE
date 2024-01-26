@@ -20,10 +20,18 @@ export class UserRecord implements UserEntity {
         this.updatedAt = user.updatedAt;
     }
 
-    // @TODO create metod to find user by ID and username
     async insert(): Promise<string> {
 
-        // @TODO check if username and email are unique
+        const existingUser = await usersDB.findOne({username: this.username});
+        if (existingUser) {
+            throw new Error(`This username is already taken! Try another one.`);
+        }
+        const existingUserByEmail = await usersDB.findOne({email: this.email});
+        if (existingUserByEmail) {
+            throw new Error(`This email is already taken! Try another one or try to recover password.`);
+        }
+
+
         const userModel = new UserModel({
             _id: this._id,
             username: this.username,

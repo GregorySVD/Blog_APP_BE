@@ -3,82 +3,102 @@ import {UserRecord} from "../records/user.record";
 import {UserEntity, UserPublic} from "../types";
 
 
-const mockUser: UserEntity = {
-    _id: new ObjectId(),
-    username: "aaaa",
-    password: "Aasz!132",
-    email: "email@example.com",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-};
-const wrongPasswordUser: UserEntity = {
-    ...mockUser,
-    password: "wrongpassword"
-};
-const wrongUsernameUser: UserEntity = {
-    ...mockUser,
-    username: "aa"
-};
-const invalidEmailUser: UserEntity = {
-    ...mockUser,
-    email: "aa"
-};
+function createMockUser(): UserEntity {
+    const random = Math.floor(Math.random() * 10000) + 1;
+    const mockUserData: UserEntity = {
+        _id: new ObjectId(),
+        username: `MockUser${random}`,
+        password: "TestPassword!132",
+        email: `mockEmail${random}@example.com`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+    return new UserRecord(mockUserData);
+
+}
+
 
 test("Can build new UserRecord", async () => {
-    const userRecordTest = new UserRecord(mockUser);
-    expect(userRecordTest.username).toBe(mockUser.username);
-    expect(mockUser._id).toBeInstanceOf(ObjectId);
-    expect(userRecordTest.password).toBe(mockUser.password);
-    expect(userRecordTest.email).toBe(mockUser.email);
-    expect(userRecordTest.createdAt).toBe(mockUser.createdAt);
-    expect(userRecordTest.updatedAt).toBe(mockUser.updatedAt);
+    const userRecordTest = createMockUser();
 
-    console.log("UserRecord successfully created with correct values");
+    expect(userRecordTest.username).toBe(userRecordTest.username);
+    expect(userRecordTest._id).toBeInstanceOf(ObjectId);
+    expect(userRecordTest.password).toBe(userRecordTest.password);
+    expect(userRecordTest.email).toBe(userRecordTest.email);
+    expect(userRecordTest.createdAt).toBe(userRecordTest.createdAt);
+    expect(userRecordTest.updatedAt).toBe(userRecordTest.updatedAt);
+
 });
 
 test("Can insert new user", async () => {
+    const mockUser = createMockUser();
     const userRecordTest = new UserRecord(mockUser);
     await userRecordTest.insert();
-    expect(userRecordTest._id).toBeDefined();
+    await expect(userRecordTest._id).toBeDefined();
 
 });
 test("Wrong password throws error", async () => {
-    const userRecord = new UserRecord(wrongPasswordUser);
+    const wrongPasswordMockUser = createMockUser();
+    wrongPasswordMockUser.password = "wrong";
+    const userRecord = new UserRecord(wrongPasswordMockUser);
     const insertUser = async () => userRecord.insert();
     await expect(insertUser).rejects.toThrowError("Invalid password");
 });
 test("Wrong username throws error", async () => {
-    const userRecord = new UserRecord(wrongUsernameUser);
+    const wrongUsernameMockUser = createMockUser();
+    wrongUsernameMockUser.username = "er";
+    const userRecord = new UserRecord(wrongUsernameMockUser);
     const insertUser = async () => userRecord.insert();
     await expect(insertUser).rejects.toThrowError("Invalid username");
 });
 test("Invalid email throws an error", async () => {
-    const userRecord = new UserRecord(invalidEmailUser);
+    const wrongEmailMockUser = createMockUser();
+    wrongEmailMockUser.email = "wrongemail";
+    const userRecord = new UserRecord(wrongEmailMockUser);
     const insertUser = async () => userRecord.insert();
 
     await expect(insertUser).rejects.toThrowError("Invalid email");
 });
 test("Can find single user record by username", async () => {
-    const foundedUser = await UserRecord.getUserByUsername("aaaa");
-    expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
+    const mockUser = createMockUser();
+    const testUser = new UserRecord(mockUser)
+    await testUser.insert();
+    const foundedUser = await UserRecord.getUserByUsername(`${testUser.username}`);
+    await expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
 });
 test("Not founded user record by username returns null", async () => {
     const foundedUser = await UserRecord.getUserByUsername("nullish");
-    expect(foundedUser).toBeNull();
+    await expect(foundedUser).toBeNull();
 });
 test("Can find single user record by email", async () => {
-    const foundedUser = await UserRecord.getUserByEmail("email@example.com");
-    expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
+    const mockUser = createMockUser();
+    const testUser = new UserRecord(mockUser)
+    await testUser.insert();
+    const foundedUser = await UserRecord.getUserByEmail(`${testUser.email}`);
+    await expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
 });
 test("Not founded user record by email returns null", async () => {
     const foundedUser = await UserRecord.getUserByEmail("nullish");
-    expect(foundedUser).toBeNull();
+    await expect(foundedUser).toBeNull();
 });
 test("Can find single user record by _id", async () => {
-    const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad29");
-    expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
+    const mockUser = createMockUser();
+    const testUser = new UserRecord(mockUser)
+    await testUser.insert();
+    const foundedUser = await UserRecord.getUserById(`${testUser._id}`);
+    await expect(foundedUser).toEqual(expect.objectContaining<UserPublic>(foundedUser));
 });
 test("Not founded user record by _id returns null", async () => {
     const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad22");
-    expect(foundedUser).toBeNull();
+    await expect(foundedUser).toBeNull();
+});
+test("Cannot insert user with taken username", async () => {
+    const mockUser = createMockUser();
+    const testUser = new UserRecord(mockUser)
+    await testUser.insert();
+    try {
+        await testUser.insert();
+    } catch (error) {
+        expect(error.message).toBe("This username is already taken! Try another one.");
+    }
 });
