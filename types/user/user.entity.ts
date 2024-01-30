@@ -1,7 +1,5 @@
 import {ObjectId} from "mongodb";
 
-
-
 export interface UserEntity {
     _id?: ObjectId;
     username: string;

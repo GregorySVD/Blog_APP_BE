@@ -1,15 +1,16 @@
+import {UserEntity} from "../types";
+import {usersDB} from "../utils/mongodb";
 import {ObjectId} from "mongodb";
-import {UserEntity, UserPublic} from "../types";
-import {UserModel, usersDB} from "../utils/mongodb";
-import {emailValidator, passwordValidator, usernameValidator} from "../types/models/user.schema";
+import {emailValidator, passwordValidator, usernameValidator} from "../types/models/user.schema.validation";
+
 
 export class UserRecord implements UserEntity {
-    public _id: ObjectId;
-    public username: string;
-    public password: string;
-    public email: string;
-    public createdAt: Date;
-    public updatedAt: Date;
+    _id: ObjectId;
+    username: string;
+    password: string;
+    email: string;
+    createdAt: Date;
+    updatedAt: Date;
 
     constructor(user: UserEntity) {
         this._id = user._id ? new ObjectId(user._id) : new ObjectId();
@@ -20,59 +21,76 @@ export class UserRecord implements UserEntity {
         this.updatedAt = user.updatedAt;
     }
 
-    async insert(): Promise<string> {
+//-----------------------------------------------------------
+    static async insertUser(newUser: UserEntity): Promise<string> {
+        try {
+            usernameValidator(newUser.username);
+            passwordValidator(newUser.password);
+            emailValidator(newUser.email);
 
-        const existingUser = await usersDB.findOne({username: this.username});
-        if (existingUser) {
-            throw new Error(`This username is already taken! Try another one.`);
+            new UserRecord({
+                username: newUser.username,
+                email: newUser.email,
+                password: newUser.password,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+            if (!newUser._id) newUser._id = new ObjectId();
+
+            const insertResult = await usersDB.insertOne(newUser);
+            const insertedId = insertResult.insertedId.toString();
+            console.log('User inserted:', insertedId);
+
+            return String(insertedId);
+        } catch (err) {
+            throw new Error(err);
         }
-        const existingUserByEmail = await usersDB.findOne({email: this.email});
-        if (existingUserByEmail) {
-            throw new Error(`This email is already taken! Try another one or try to recover password.`);
+    }
+
+    static async findUserById(userId: string): Promise<UserEntity | null> {
+        try {
+            const userObjectId = new ObjectId(userId);
+            const foundedUser = await usersDB.findOne({"_id": userObjectId});
+            if (!foundedUser) return null;
+            return new UserRecord({
+                _id: foundedUser._id,
+                username: foundedUser.username,
+                password: foundedUser.password,
+                email: foundedUser.email,
+                createdAt: foundedUser.createdAt,
+                updatedAt: foundedUser.updatedAt,
+            });
+        } catch (err) {
+            throw new Error(err);
         }
-
-
-        const userModel = new UserModel({
-            _id: this._id,
-            username: this.username,
-            password: this.password,
-            email: this.email,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
-        });
-        if (!passwordValidator(this.password) || !emailValidator(this.email) || !usernameValidator(this.username))
-            throw new Error("Invalid data");
-
-        await usersDB.insertOne(userModel);
-        return userModel._id.toString();
-
     }
-
-//@TODO fix generic type to avoid passing any to Record
-    private static async getUserByField(field: Record<string, any>): Promise<UserPublic | null> {
-        const user = await usersDB.findOne(field);
-        if (!user) return null;
-
-        return {
-            username: user.username,
-            email: user.email,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-            _id: user._id,
-        };
-    }
-
-    static async getUserByUsername(username: string): Promise<UserPublic | null> {
-        return this.getUserByField({username});
-    }
-
-    static async getUserByEmail(email: string): Promise<UserPublic | null> {
-        return this.getUserByField({email});
-    }
-
-    static async getUserById(id: string): Promise<UserPublic | null> {
-        const objectId: ObjectId = new ObjectId(id);
-        return this.getUserByField({_id: objectId});
-    }
+    //
+    // static async isUsernameUnique(username: string): Promise<boolean> {
+    //     try {
+    //         const existingUser = await usersDB.findOne({"username": username});
+    //         return !existingUser;
+    //     } catch (err) {
+    //         throw new Error(err);
+    //     }
+    // }
+    //
+    //
+    // static async deleteUserById(userId: string): Promise<boolean> {
+    //     try {
+    //
+    //         const userObjectId = new ObjectId(userId);
+    //         const result = await usersDB.deleteOne({"_id": userObjectId});
+    //
+    //         if (result.deletedCount === 1) {
+    //             console.log(`User with ID ${userId} deleted successfully`);
+    //             return true;
+    //         } else {
+    //             console.log(`User with ID ${userId} not found`);
+    //             return false;
+    //         }
+    //     } catch (err) {
+    //         throw new Error(err);
+    //     }
+    // }
 
 }
