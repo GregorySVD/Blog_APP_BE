@@ -1,7 +1,7 @@
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
 import {ObjectId} from "mongodb";
-import {emailValidator, passwordValidator, usernameValidator} from "../types/models/user.schema.validation";
+import {emailValidator, passwordValidator, usernameValidator} from "../utils/user.validation/user.validation";
 
 
 export class UserRecord implements UserEntity {
@@ -24,9 +24,9 @@ export class UserRecord implements UserEntity {
 //-----------------------------------------------------------
     static async insertUser(newUser: UserEntity): Promise<string> {
         try {
-            usernameValidator(newUser.username);
-            passwordValidator(newUser.password);
-            emailValidator(newUser.email);
+            await usernameValidator(newUser.username);
+            await passwordValidator(newUser.password);
+            await emailValidator(newUser.email);
 
             new UserRecord({
                 username: newUser.username,
@@ -46,12 +46,12 @@ export class UserRecord implements UserEntity {
             throw new Error(err);
         }
     }
-
     static async findUserById(userId: string): Promise<UserEntity | null> {
         try {
             const userObjectId = new ObjectId(userId);
             const foundedUser = await usersDB.findOne({"_id": userObjectId});
-            if (!foundedUser) return null;
+            if(!foundedUser) return null;
+
             return new UserRecord({
                 _id: foundedUser._id,
                 username: foundedUser.username,
@@ -64,17 +64,11 @@ export class UserRecord implements UserEntity {
             throw new Error(err);
         }
     }
+
     //
-    // static async isUsernameUnique(username: string): Promise<boolean> {
-    //     try {
-    //         const existingUser = await usersDB.findOne({"username": username});
-    //         return !existingUser;
-    //     } catch (err) {
-    //         throw new Error(err);
-    //     }
-    // }
-    //
-    //
+
+    //----------------------------------------------------------------
+
     // static async deleteUserById(userId: string): Promise<boolean> {
     //     try {
     //

@@ -1,5 +1,6 @@
 import {UserEntity} from "../types";
 import {UserRecord} from "../records/user.record";
+import {isUsernameUnique} from "../utils/user.validation/user.validation";
 
 
 function createMockUser(): UserEntity {
@@ -15,7 +16,7 @@ function createMockUser(): UserEntity {
 
 }
 
-async function insertMockUser(): Promise<string> {
+export async function insertMockUser(): Promise<string> {
     const mockUser = createMockUser();
     return await UserRecord.insertUser(mockUser);
 }
@@ -67,17 +68,21 @@ test("Can find single user record by _id", async () => {
     await expect(user).toEqual(expect.objectContaining<UserEntity | null>(user));
 });
 //----------------------------------------------------------------
-test("Not founded user record by _id returns null", async () => {
+test("Not founded user returns null", async () => {
     const foundedUser = await UserRecord.findUserById("65b15b6973947f0159b8ad22");
     await expect(foundedUser).toBeNull();
 });
 //----------------------------------------------------------------
-// test("isUsernameUnique throw error if this username is already taken", async () => {
-//     const insertedMockUser = await insertMockUser();
-//     const insertedUser = await UserRecord.findUserById(insertedMockUser);
-//     await UserRecord.isUsernameUnique(insertedUser.username);
-//
-// });
+test("isUsernameUnique returns false if this username is already taken", async () => {
+    const insertedMockUser = await insertMockUser();
+    const insertedUser = await UserRecord.findUserById(insertedMockUser);
+    const result = await isUsernameUnique(insertedUser.username);
+    expect(result).toBeFalsy();
+});
+test("isUsernameUnique returns true if this username is unique", async () => {
+    const result = await isUsernameUnique("TestUniqueUser");
+    expect(result).toBeTruthy();
+});
 // test("Cannot insert user with taken username", async () => {
 //     const mockUser = createMockUser();
 //     const testUser = new UserRecord(mockUser)
@@ -101,25 +106,4 @@ test("Not founded user record by _id returns null", async () => {
 // });
 // test("Can delete a user by given id", async () => {
 //     await UserRecord.deleteUser("65b15b6973947f0159b8ad29");
-// })
-// test("test", async () => {
-//     console.log(User);
-// })
-//
-//
-//
-// import {UserRecord} from "../records/user.record";
-// import {usernameValidator} from "../types/models/user.schema.validation";
-//
-// test("test", async () => {
-//     const user2 = new UserRecord({
-//         username: "user2",
-//         email: "user2@example.com",
-//         password: "passaaa"
-//     });
-//     console.log(await UserRecord.insertUser(user2));
-//
-// })
-// test("test", async () => {
-//     usernameValidator('hi');
 // })
