@@ -25,9 +25,9 @@ export const usernameValidator = async (username: string): Promise<boolean> => {
     if (username.length < minlength || username.length > maxlength) {
         throw new Error(`Invalid username: Must be between ${minlength} and ${maxlength} characters long`);
     }
-    const usernameRegex = /^[a-zA-Z0-9_\\.]+$/;
+    const usernameRegex = /^[a-zA-Z0-9_.-]+$/;
     if (!usernameRegex.test(username)) {
-        throw new Error("Invalid username: Invalid characters");
+        throw new Error("Usernames can only contain letters, numbers, underscores (_), periods (.), and hyphens (-). Please try again.");
     }
     if (!await isUsernameUnique(username)) {
         throw new Error("Invalid username: This username is already taken")
@@ -46,9 +46,9 @@ export const emailValidator = async (email: string): Promise<boolean> => {
     if (email.length < minlength || email.length > maxlength) {
         throw new Error(`Invalid email: Must be between ${minlength} and ${maxlength} characters long`);
     }
-    const regex = /^[\w-]+@([\w-]+\.)+[\w-]+$/;
-    if (!regex.test(email)) {
-        throw new Error("Invalid email: Invalid email format");
+    const emailRegex = /^[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+        throw new Error("Please enter a valid email address. Double-check for typos and make sure it includes: a username, an '@' symbol, and a domain name (e.g., example@gmail.com).");
     }
     if (!await isEmailUnique) {
         throw new Error("Invalid email: This email is already taken");
