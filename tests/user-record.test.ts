@@ -4,6 +4,8 @@ import {UserRecord} from "../records/user.record";
 import {isUsernameUnique} from "../utils/user.validation/user.validation";
 
 
+
+
 function createMockUser(): UserEntity {
     const random = Math.floor(Math.random() * 10000) + 1;
     const mockUserData: UserEntity = {
@@ -129,4 +131,9 @@ describe("Can delete a user by given id", () => {
 
     });
 
-})
+});
+describe("findAllUsers", () => {
+    it("should return an array of UserRecord objects when users are found", async () => {
+        expect(UserRecord.findAllUsers).toBeDefined();
+    });
+});

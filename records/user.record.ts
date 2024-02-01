@@ -50,6 +50,23 @@ export class UserRecord implements UserEntity {
         }
     }
 
+    static async findAllUsers(): Promise<UserEntity[]> {
+        try {
+            const allUsers = await usersDB.find().toArray();
+            return allUsers.map((user) => new UserRecord({
+                _id: user._id,
+                username: user.username,
+                password: user.password,
+                email: user.email,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            }));
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
+
     static async findUserById(userId: string): Promise<UserEntity | null> {
         try {
             const userObjectId = new ObjectId(userId);
@@ -69,7 +86,7 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    static async deleteUserById(userId: string ): Promise<boolean> {
+    static async deleteUserById(userId: string): Promise<boolean> {
         try {
             const userObjectId = new ObjectId(userId);
             const result = await usersDB.deleteOne({"_id": userObjectId});

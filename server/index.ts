@@ -1,7 +1,8 @@
 import cors from "cors";
 import "express-async-errors";
 import express from "express";
-import {postsDB, usersDB} from "../utils/mongodb";
+import {postsDB} from "../utils/mongodb";
+import {UserRecord} from "../records/user.record";
 
 const app = express();
 
@@ -22,8 +23,8 @@ app.get("/", async (req, res) => {
 });
 app.get("/users/", async(req, res) => {
     try {
-        const result = await usersDB.find().toArray();
-        res.json(result);
+        const users = await UserRecord.findAllUsers();
+        res.json(users);
     }  catch (err) {
         console.error(err);
         res.status(500).json({error: "Internal Server Error"});
