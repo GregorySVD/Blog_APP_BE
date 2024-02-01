@@ -1,6 +1,7 @@
+import {ObjectId} from "mongodb";
 import {UserEntity} from "../types";
 import {UserRecord} from "../records/user.record";
-import {isUsernameUnique} from "../utils/user.validation/user.validation";
+import { isUsernameUnique} from "../utils/user.validation/user.validation";
 
 
 function createMockUser(): UserEntity {
@@ -18,7 +19,7 @@ function createMockUser(): UserEntity {
 
 export async function insertMockUser(): Promise<string> {
     const mockUser = createMockUser();
-    return await UserRecord.insertUser(mockUser);
+    return UserRecord.insertUser(mockUser);
 }
 
 //----------------------------------------------------------------
@@ -79,31 +80,34 @@ test("isUsernameUnique returns false if this username is already taken", async (
     const result = await isUsernameUnique(insertedUser.username);
     expect(result).toBeFalsy();
 });
+//----------------------------------------------------------------
 test("isUsernameUnique returns true if this username is unique", async () => {
     const result = await isUsernameUnique("TestUniqueUser");
     expect(result).toBeTruthy();
 });
-// test("Cannot insert user with taken username", async () => {
-//     const mockUser = createMockUser();
-//     const testUser = new UserRecord(mockUser)
-//     await testUser.insert();
-//     try {
-//         await testUser.insert();
-//     } catch (error) {
-//         expect(error.message).toBe("This username is already taken! Try another one.");
-//     }
-// });
-// test("Cannot insert user with taken email", async () => {
-//     const mockUser = createMockUser();
-//     const testUser = new UserRecord(mockUser)
-//     await testUser.insert();
-//     testUser.username = "random" + Math.floor(Math.random() * 10000) + 1;
-//     try {
-//         await testUser.insert();
-//     } catch (error) {
-//         expect(error.message).toBe("This email is already taken! Try another one or try to recover password.");
-//     }
-// });
+//----------------------------------------------------------------
+test("Cannot insert user with taken username", async () => {
+    const mockUser = createMockUser();
+    await UserRecord.insertUser(mockUser);
+    try {
+        await UserRecord.insertUser(mockUser);
+    } catch (error) {
+        expect(error.message).toBe("Error: Invalid username: This username is already taken");
+    }
+});
+//----------------------------------------------------------------
+test("Cannot insert user with taken email", async () => {
+    const mockUser = createMockUser();
+    await UserRecord.insertUser(mockUser);
+    mockUser.username = `random${  Math.floor(Math.random() * 10000)  }${1}`;
+    mockUser._id = new ObjectId();
+    try {
+        await UserRecord.insertUser(mockUser);
+
+    } catch (error) {
+        expect(error.message).toBe("This email is already taken! Try another one or try to recover password.");
+    }
+});
 // test("Can delete a user by given id", async () => {
 //     await UserRecord.deleteUser("65b15b6973947f0159b8ad29");
 // })

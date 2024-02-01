@@ -1,6 +1,6 @@
+import {ObjectId} from "mongodb";
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
-import {ObjectId} from "mongodb";
 import {emailValidator, passwordValidator, usernameValidator} from "../utils/user.validation/user.validation";
 
 
@@ -24,33 +24,37 @@ export class UserRecord implements UserEntity {
 //-----------------------------------------------------------
     static async insertUser(newUser: UserEntity): Promise<string> {
         try {
+            // Check if user already exists
             await usernameValidator(newUser.username);
-            await passwordValidator(newUser.password);
             await emailValidator(newUser.email);
+            await passwordValidator(newUser.password);
 
             new UserRecord({
+                _id: new ObjectId(),
                 username: newUser.username,
                 email: newUser.email,
                 password: newUser.password,
                 createdAt: new Date(),
-                updatedAt: new Date(),
+                updatedAt: new Date()
             });
-            if (!newUser._id) newUser._id = new ObjectId();
+
 
             const insertResult = await usersDB.insertOne(newUser);
             const insertedId = insertResult.insertedId.toString();
-            console.log('User inserted:', insertedId);
+            console.log("User inserted:", insertedId);
 
             return String(insertedId);
+
         } catch (err) {
             throw new Error(err);
         }
     }
+
     static async findUserById(userId: string): Promise<UserEntity | null> {
         try {
             const userObjectId = new ObjectId(userId);
             const foundedUser = await usersDB.findOne({"_id": userObjectId});
-            if(!foundedUser) return null;
+            if (!foundedUser) return null;
 
             return new UserRecord({
                 _id: foundedUser._id,
