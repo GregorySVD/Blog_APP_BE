@@ -1,7 +1,7 @@
 import {ObjectId} from "mongodb";
 import {UserEntity} from "../types";
 import {UserRecord} from "../records/user.record";
-import { isUsernameUnique} from "../utils/user.validation/user.validation";
+import {isUsernameUnique} from "../utils/user.validation/user.validation";
 
 
 function createMockUser(): UserEntity {
@@ -99,7 +99,7 @@ test("Cannot insert user with taken username", async () => {
 test("Cannot insert user with taken email", async () => {
     const mockUser = createMockUser();
     await UserRecord.insertUser(mockUser);
-    mockUser.username = `random${  Math.floor(Math.random() * 10000)  }${1}`;
+    mockUser.username = `random${Math.floor(Math.random() * 10000)}${1}`;
     mockUser._id = new ObjectId();
     try {
         await UserRecord.insertUser(mockUser);
@@ -108,6 +108,25 @@ test("Cannot insert user with taken email", async () => {
         expect(error.message).toBe("This email is already taken! Try another one or try to recover password.");
     }
 });
-// test("Can delete a user by given id", async () => {
-//     await UserRecord.deleteUser("65b15b6973947f0159b8ad29");
-// })
+describe("Can delete a user by given id", () => {
+    it("should delete a user by given id", async () => {
+        try {
+            const mockUserId = await insertMockUser();
+            await UserRecord.deleteUserById(mockUserId);
+            expect(await UserRecord.findUserById(mockUserId)).toBeNull();
+        } catch (error) {
+            console.log(error.message);
+        }
+    })
+    it("should return false if the user is not found", async () => {
+
+        try {
+            const result = await UserRecord.deleteUserById("65b93e151dcda802f5cfa168");
+            expect(result).toBe(false);
+        } catch (error) {
+            console.log(error.message);
+        }
+
+    });
+
+})

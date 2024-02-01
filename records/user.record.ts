@@ -69,26 +69,21 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    //
+    static async deleteUserById(userId: string ): Promise<boolean> {
+        try {
+            const userObjectId = new ObjectId(userId);
+            const result = await usersDB.deleteOne({"_id": userObjectId});
 
-    //----------------------------------------------------------------
-
-    // static async deleteUserById(userId: string): Promise<boolean> {
-    //     try {
-    //
-    //         const userObjectId = new ObjectId(userId);
-    //         const result = await usersDB.deleteOne({"_id": userObjectId});
-    //
-    //         if (result.deletedCount === 1) {
-    //             console.log(`User with ID ${userId} deleted successfully`);
-    //             return true;
-    //         } else {
-    //             console.log(`User with ID ${userId} not found`);
-    //             return false;
-    //         }
-    //     } catch (err) {
-    //         throw new Error(err);
-    //     }
-    // }
+            if (result.deletedCount === 1) {
+                console.log(`User with ID ${userId} deleted successfully`);
+                return true;
+            } else {
+                console.log(`User with ID ${userId} not found`);
+                return false;
+            }
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
 
 }
