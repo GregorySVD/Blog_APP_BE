@@ -50,8 +50,8 @@ export const emailValidator = async (email: string): Promise<boolean> => {
     if (!emailRegex.test(email)) {
         throw new Error("Please enter a valid email address. Double-check for typos and make sure it includes: a username, an '@' symbol, and a domain name (e.g., example@gmail.com).");
     }
-    if (!await isEmailUnique) {
-        throw new Error("Invalid email: This email is already taken");
+    if (!await isEmailUnique(email)) {
+        throw new Error("Invalid email: This email is already taken.");
     }
     return true;
 };
