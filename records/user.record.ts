@@ -50,6 +50,7 @@ export class UserRecord implements UserEntity {
         }
     }
 
+//-----------------------------------------------------------
     static async findAllUsers(): Promise<UserEntity[]> {
         try {
             const allUsers = await usersDB.find().toArray();
@@ -66,7 +67,7 @@ export class UserRecord implements UserEntity {
         }
     }
 
-
+    //-----------------------------------------------------------
     static async findUserById(userId: string): Promise<UserEntity | null> {
         try {
             const userObjectId = new ObjectId(userId);
@@ -86,6 +87,7 @@ export class UserRecord implements UserEntity {
         }
     }
 
+//-----------------------------------------------------------
     static async deleteUserById(userId: string): Promise<boolean> {
         try {
             const userObjectId = new ObjectId(userId);
@@ -102,5 +104,38 @@ export class UserRecord implements UserEntity {
             throw new Error(err);
         }
     }
+
+    static async deleteAllUsers(): Promise<void> {
+        try {
+            const allUsers = await UserRecord.findAllUsers();
+            if (allUsers.length === 0) {
+                return;
+            }
+            for (const user of allUsers) {
+                await UserRecord.deleteUserById(String(user._id));
+            }
+            await console.log("Users deleted successfully!");
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
+    // async updatePassword(newPassword: string): Promise<void> {
+    //     try {
+    //         await passwordValidator(newPassword);
+    //         const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: newPassword}});
+    //         if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
+    //             console.log("User password updated successfully");
+    //             this.password = newPassword;
+    //         } else {
+    //             new Error("User not found or password not updated");
+    //         }
+    //         this.updatedAt = new Date();
+    //
+    //     } catch (err) {
+    //         throw new Error("Cannot update user password");
+    //     }
+    //
+    // }
 
 }

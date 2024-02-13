@@ -4,8 +4,6 @@ import {UserRecord} from "../records/user.record";
 import {isUsernameUnique} from "../utils/user.validation/user.validation";
 
 
-
-
 function createMockUser(): UserEntity {
     const random = Math.floor(Math.random() * 10000) + 1;
     const mockUserData: UserEntity = {
@@ -35,9 +33,19 @@ test("Can build new UserRecord", async () => {
 });
 //----------------------------------------------------------------
 test("Can insert new user", async () => {
+    await UserRecord.deleteAllUsers();
     const insertedUserId = await insertMockUser();
     await expect(insertedUserId).toBeDefined();
+    await UserRecord.deleteUserById(insertedUserId);
 });
+describe("Can delete all user records in userDb collection", () => {
+    it("should delete all", async () => {
+        await UserRecord.deleteAllUsers();
+        const foundedUser = await UserRecord.findAllUsers();
+        expect(foundedUser.length).toBe(0);
+    });
+
+})
 //----------------------------------------------------------------
 test("Wrong password throws error", async () => {
     const wrongPasswordMockUser = createMockUser();
