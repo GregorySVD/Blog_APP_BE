@@ -12,7 +12,6 @@ function createMockUser(): UserEntity {
         updatedAt: new Date(),
     };
     return new UserRecord(mockUserData);
-
 }
 
 export async function insertMockUser(): Promise<string> {
@@ -93,7 +92,7 @@ describe("Can insert and validate new user", () => {
 //----------------------------------------------------------------
 describe("findAllUsers", () => {
     it("should return an array of UserRecord objects when users are found", async () => {
-        expect(UserRecord.findAllUsers).toBeDefined();
+        expect(UserRecord.ListAllUsers).toBeDefined();
     });
 });
 
@@ -104,14 +103,14 @@ describe("Find user by id returns User Entity or null", () => {
     it("Can find single user record by _id", async () => {
         const mockUser = createMockUser();
         const insertedUserId = await UserRecord.insertUser(mockUser);
-        const user = await UserRecord.findUserById(insertedUserId);
+        const user = await UserRecord.getUserById(insertedUserId);
         await expect(user).toEqual(expect.objectContaining<UserEntity | null>(user));
         if (user != null) {
             await UserRecord.deleteUserById(insertedUserId);
         }
     })
     it("Not founded user returns null", async () => {
-        const foundedUser = await UserRecord.findUserById("65b15b6973947f0159b8ad22");
+        const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad22");
         await expect(foundedUser).toBeNull();
     });
 
@@ -123,7 +122,7 @@ describe("Can delete a user by given id", () => {
         try {
             const mockUserId = await insertMockUser();
             await UserRecord.deleteUserById(mockUserId);
-            expect(await UserRecord.findUserById(mockUserId)).toBeNull();
+            expect(await UserRecord.getUserById(mockUserId)).toBeNull();
         } catch (error) {
             console.log(error.message);
         }
@@ -145,7 +144,66 @@ describe("Can delete a user by given id", () => {
 describe("Can delete all user records in userDb collection", () => {
     it("should delete all", async () => {
         await UserRecord.deleteAllUsers();
-        const foundedUser = await UserRecord.findAllUsers();
+        const foundedUser = await UserRecord.ListAllUsers();
         expect(foundedUser.length).toBe(0);
     });
+});
+describe("Can update and validate password", () => {
+    it("Throws an error on too short password", async () => {
+
+        const insertedUserId = await insertMockUser();
+        const user = await UserRecord.getUserById(insertedUserId);
+        if (!insertedUserId) {
+            await UserRecord.deleteUserById(insertedUserId);
+        }
+        const userRecord = new UserRecord(user);
+        try {
+            await userRecord.updatePassword("aaa");
+        } catch (error) {
+            expect(error.message).toBe("Cannot update user password.");
+        } finally {
+            await deleteMockUserFromDataBase(insertedUserId);
+        }
+    });
+    it("Throws an error on empty password", async () => {
+
+        const insertedUserId = await insertMockUser();
+        const user = await UserRecord.getUserById(insertedUserId);
+        if (!insertedUserId) {
+            await UserRecord.deleteUserById(insertedUserId);
+        }
+        const userRecord = new UserRecord(user);
+        try {
+            await userRecord.updatePassword("");
+        } catch (error) {
+            expect(error.message).toBe("Cannot update user password.");
+        } finally {
+            await deleteMockUserFromDataBase(insertedUserId);
+        }
+    });
+    it("Throws an error for not founded user", async () => {
+        const mockUser = createMockUser();
+        try {
+            await new UserRecord(mockUser).updatePassword("TestPassword123!");
+        } catch (error) {
+            expect(error.message).toBe("Cannot update user password.");
+        }
+    });
+    it("should update password", async () => {
+        const insertedUserId = await insertMockUser();
+        const user = await UserRecord.getUserById(insertedUserId);
+        if (!insertedUserId) {
+            await UserRecord.deleteUserById(insertedUserId);
+        }
+        const userRecord = new UserRecord(user);
+        try {
+            await userRecord.updatePassword("UpdateThisPassword123!");
+        } catch (err) {
+            throw new Error(err);
+        } finally {
+            await UserRecord.deleteUserById(insertedUserId);
+        }
+    })
+
+
 });

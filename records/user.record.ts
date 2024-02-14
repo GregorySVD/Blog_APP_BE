@@ -13,6 +13,7 @@ export class UserRecord implements UserEntity {
     updatedAt: Date;
 
     constructor(user: UserEntity) {
+
         this._id = user._id ? new ObjectId(user._id) : new ObjectId();
         this.username = user.username;
         this.password = user.password;
@@ -22,6 +23,25 @@ export class UserRecord implements UserEntity {
     }
 
 //-----------------------------------------------------------
+
+    async updatePassword(newPassword: string): Promise<void> {
+        try {
+            await passwordValidator(newPassword);
+            const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: newPassword}});
+            if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
+                console.log("User password updated successfully");
+                this.password = newPassword;
+            } else {
+                new Error("User not found or password not updated");
+            }
+            this.updatedAt = new Date();
+
+        } catch (err) {
+            throw new Error("Cannot update user password.");
+        }
+
+    }
+
     static async insertUser(newUser: UserEntity): Promise<string> {
         try {
             // Check if user already exists
@@ -38,7 +58,6 @@ export class UserRecord implements UserEntity {
                 updatedAt: new Date()
             });
 
-
             const insertResult = await usersDB.insertOne(newUser);
             const insertedId = insertResult.insertedId.toString();
             console.log("User inserted:", insertedId);
@@ -51,7 +70,8 @@ export class UserRecord implements UserEntity {
     }
 
 //-----------------------------------------------------------
-    static async findAllUsers(): Promise<UserEntity[]> {
+
+    static async ListAllUsers(): Promise<UserEntity[]> {
         try {
             const allUsers = await usersDB.find().toArray();
             return allUsers.map((user) => new UserRecord({
@@ -68,7 +88,8 @@ export class UserRecord implements UserEntity {
     }
 
     //-----------------------------------------------------------
-    static async findUserById(userId: string): Promise<UserEntity | null> {
+
+    static async getUserById(userId: string): Promise<UserEntity | null> {
         try {
             const userObjectId = new ObjectId(userId);
             const foundedUser = await usersDB.findOne({"_id": userObjectId});
@@ -81,13 +102,15 @@ export class UserRecord implements UserEntity {
                 email: foundedUser.email,
                 createdAt: foundedUser.createdAt,
                 updatedAt: foundedUser.updatedAt,
-            });
+            } as UserRecord);
+
         } catch (err) {
             throw new Error(err);
         }
     }
 
 //-----------------------------------------------------------
+
     static async deleteUserById(userId: string): Promise<boolean> {
         try {
             const userObjectId = new ObjectId(userId);
@@ -107,7 +130,7 @@ export class UserRecord implements UserEntity {
 
     static async deleteAllUsers(): Promise<void> {
         try {
-            const allUsers = await UserRecord.findAllUsers();
+            const allUsers = await UserRecord.ListAllUsers();
             if (allUsers.length === 0) {
                 return;
             }
@@ -119,23 +142,5 @@ export class UserRecord implements UserEntity {
             throw new Error(err);
         }
     }
-
-    // async updatePassword(newPassword: string): Promise<void> {
-    //     try {
-    //         await passwordValidator(newPassword);
-    //         const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: newPassword}});
-    //         if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
-    //             console.log("User password updated successfully");
-    //             this.password = newPassword;
-    //         } else {
-    //             new Error("User not found or password not updated");
-    //         }
-    //         this.updatedAt = new Date();
-    //
-    //     } catch (err) {
-    //         throw new Error("Cannot update user password");
-    //     }
-    //
-    // }
 
 }

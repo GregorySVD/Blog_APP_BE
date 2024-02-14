@@ -23,7 +23,7 @@ app.get("/", async (req, res) => {
 });
 app.get("/users/", async(req, res) => {
     try {
-        const users = await UserRecord.findAllUsers();
+        const users = await UserRecord.ListAllUsers();
         res.json(users);
     }  catch (err) {
         console.error(err);
