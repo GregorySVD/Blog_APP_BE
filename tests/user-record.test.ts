@@ -203,7 +203,8 @@ describe("Can update and validate password", () => {
         } finally {
             await UserRecord.deleteUserById(insertedUserId);
         }
-    })
+    });
+
 
 
 });

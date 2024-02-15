@@ -11,15 +11,16 @@ export class UserRecord implements UserEntity {
     email: string;
     createdAt: Date;
     updatedAt: Date;
+    isAdmin: boolean;
 
     constructor(user: UserEntity) {
-
         this._id = user._id ? new ObjectId(user._id) : new ObjectId();
         this.username = user.username;
         this.password = user.password;
         this.email = user.email;
         this.createdAt = user.createdAt;
         this.updatedAt = user.updatedAt;
+        this.isAdmin = user.isAdmin;
     }
 
 //-----------------------------------------------------------
@@ -39,8 +40,8 @@ export class UserRecord implements UserEntity {
         } catch (err) {
             throw new Error("Cannot update user password.");
         }
-
     }
+
 
     static async insertUser(newUser: UserEntity): Promise<string> {
         try {
@@ -55,7 +56,8 @@ export class UserRecord implements UserEntity {
                 email: newUser.email,
                 password: newUser.password,
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                isAdmin: false,
             });
 
             const insertResult = await usersDB.insertOne(newUser);
@@ -81,6 +83,7 @@ export class UserRecord implements UserEntity {
                 email: user.email,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
+                isAdmin: user.isAdmin,
             }));
         } catch (err) {
             throw new Error(err);
@@ -102,6 +105,7 @@ export class UserRecord implements UserEntity {
                 email: foundedUser.email,
                 createdAt: foundedUser.createdAt,
                 updatedAt: foundedUser.updatedAt,
+                isAdmin: foundedUser.isAdmin,
             } as UserRecord);
 
         } catch (err) {

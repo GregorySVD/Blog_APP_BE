@@ -7,4 +7,5 @@ export interface UserEntity {
     email: string;
     createdAt?: Date;
     updatedAt?: Date;
+    isAdmin?: boolean;
 }
