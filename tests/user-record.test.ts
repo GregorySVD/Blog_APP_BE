@@ -10,6 +10,7 @@ function createMockUser(): UserEntity {
         email: `mockEmail${random}@example.com`,
         createdAt: new Date(),
         updatedAt: new Date(),
+        isAdmin: false,
     };
     return new UserRecord(mockUserData);
 }
@@ -31,6 +32,7 @@ it("Can build new UserRecord", async () => {
     expect(userRecordTest.email).toBe(userRecordTest.email);
     expect(userRecordTest.createdAt).toBe(userRecordTest.createdAt);
     expect(userRecordTest.updatedAt).toBe(userRecordTest.updatedAt);
+    expect(userRecordTest.isAdmin).toBeFalsy();
 });
 //----------------------------------------------------------------
 describe("Can insert and validate new user", () => {
