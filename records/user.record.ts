@@ -41,6 +41,21 @@ export class UserRecord implements UserEntity {
             throw new Error("Cannot update user password.");
         }
     }
+    async updateIsAdminStatus(): Promise<void> {
+        try {
+            const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {isAdmin: !this.isAdmin}});
+            if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
+                console.log("User password updated successfully");
+                this.isAdmin = !this.isAdmin;
+            } else {
+                new Error("User not found or password not updated");
+            }
+            this.updatedAt = new Date();
+
+        } catch (err) {
+            throw new Error("Cannot update user password.");
+        }
+    }
 
 
     static async insertUser(newUser: UserEntity): Promise<string> {

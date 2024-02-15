@@ -206,7 +206,35 @@ describe("Can update and validate password", () => {
             await UserRecord.deleteUserById(insertedUserId);
         }
     });
+    describe("Can update and validate admin status", () => {
+        it("Throws an error for not founded user", async () => {
+            const mockUser = createMockUser();
+            try {
+                await new UserRecord(mockUser).updateIsAdminStatus();
+            } catch (error) {
+                expect(error.message).toBe("Cannot update user password."); // Change error message if needed
+            }
+        });
 
+        it("should toggle admin status", async () => {
+            const insertedUserId = await insertMockUser();
+            const user = await UserRecord.getUserById(insertedUserId);
+            if (!insertedUserId) {
+                await UserRecord.deleteUserById(insertedUserId);
+            }
+            const userRecord = new UserRecord(user);
+            const initialIsAdmin = userRecord.isAdmin;
+            try {
+                await userRecord.updateIsAdminStatus();
+                expect(userRecord.isAdmin).toBe(!initialIsAdmin);
+            } catch (err) {
+                throw new Error(err);
+            } finally {
+
+                await UserRecord.deleteUserById(insertedUserId);
+            }
+        });
+    });
 
 
 });
