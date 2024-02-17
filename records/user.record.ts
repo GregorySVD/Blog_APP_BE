@@ -1,8 +1,9 @@
 import {ObjectId} from "mongodb";
+import * as bcrypt from "bcryptjs";
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
 import {emailValidator, passwordValidator, usernameValidator} from "../utils/user.validation/user.validation";
-import * as bcrypt from 'bcryptjs';
+import {SALT} from "../utils/crypto";
 
 
 export class UserRecord implements UserEntity {
@@ -29,7 +30,9 @@ export class UserRecord implements UserEntity {
     async updatePassword(newPassword: string): Promise<void> {
         try {
             await passwordValidator(newPassword);
-            const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: newPassword}});
+            const hashedNewPassword = await bcrypt.hash(newPassword, SALT);
+
+            const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: hashedNewPassword}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
                 console.log("User password updated successfully");
                 this.password = newPassword;
@@ -67,9 +70,7 @@ export class UserRecord implements UserEntity {
             await passwordValidator(newUser.password);
 
             //Hashing the password
-            const salt = await bcrypt.genSalt(10);
-            newUser.password = await bcrypt.hash(newUser.password, salt);
-
+            newUser.password = await bcrypt.hash(newUser.password, SALT);
 
             await new UserRecord({
                 _id: new ObjectId(),
@@ -166,10 +167,9 @@ export class UserRecord implements UserEntity {
             if (result.deletedCount === 1) {
                 console.log(`User with ID ${userId} deleted successfully`);
                 return true;
-            } else {
-                console.log(`User with ID ${userId} not found`);
-                return false;
             }
+            await console.log(`User with ID ${userId} not found`);
+            return false;
         } catch (err) {
             throw new Error(err);
         }
@@ -190,8 +190,21 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    // static async login(username: string, password: string): Promise<UserEntity | null> {
-    //
-    // }
+    static async login(username: string, password: string): Promise<UserEntity | null> {
+        try {
+            const user = await UserRecord.getUserByUsername(username);
+            if (!user) {
+                return null;
+            }
+            const isMatched = await bcrypt.compare(password, user.password);
+            if (isMatched) {
+                return user;
+            }
+            return null;
+
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
 
 }

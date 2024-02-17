@@ -1,4 +1,5 @@
 import {ObjectId} from "mongodb";
+
 import {UserEntity} from "../types";
 import {UserRecord} from "../records/user.record";
 
@@ -39,7 +40,7 @@ describe("Can insert and validate new user", () => {
     it("Can insert new user", async () => {
         const insertedUserId = await insertMockUser();
         await expect(insertedUserId).toBeDefined();
-        // await deleteMockUserFromDataBase(insertedUserId);
+        await deleteMockUserFromDataBase(insertedUserId);
     });
 
     // USER VALIDATION
@@ -108,13 +109,13 @@ describe("Find user by id returns UserEntity or null", () => {
         const user = await UserRecord.getUserById(insertedUserId);
         await expect(user).toEqual(expect.objectContaining<UserEntity>(user));
         await UserRecord.deleteUserById(insertedUserId);
-    })
+    });
     it("Not founded user returns null", async () => {
         const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad22");
         await expect(foundedUser).toBeNull();
     });
 
-})
+});
 describe("Find user by username returns null or UserRecord", () => {
     it("Can find user by username", async () => {
         const mockUser = createMockUser();
@@ -127,7 +128,7 @@ describe("Find user by username returns null or UserRecord", () => {
         const foundedUser = await UserRecord.getUserByUsername("65b15b6973947f0159b8ad22");
         await expect(foundedUser).toBeNull();
     });
-})
+});
 
 
 //----------------------------------------------------------------
@@ -140,7 +141,7 @@ describe("Can delete a user by given id", () => {
         } catch (error) {
             console.log(error.message);
         }
-    })
+    });
     it("should return false if the user is not found", async () => {
 
         try {
@@ -244,6 +245,44 @@ describe("Can update and validate password", () => {
             } finally {
 
                 await UserRecord.deleteUserById(insertedUserId);
+            }
+        });
+    });
+//----------------------------------------------------------------
+    describe("UserRecord login method", () => {
+        it("Returns user if login is password and username matches user in database. ", async () => {
+            try {
+                const mockUser = await createMockUser();
+                const actualPassword = mockUser.password;
+
+                const insertedId = await UserRecord.insertUser(mockUser);
+                const user = await UserRecord.login(mockUser.username, actualPassword);
+                await expect(user).toEqual(expect.objectContaining<UserEntity>(user));
+                await UserRecord.deleteUserById(insertedId);
+
+            } catch (err) {
+                throw new Error(err);
+            }
+
+        });
+        it("Returns null if username not found", async () => {
+            try {
+                const user = await UserRecord.login("mockUser.username1289471298" , "mockPassword123!");
+                expect(user).toBeNull();
+            } catch (err) {
+                throw new Error(err);
+            }
+
+        });
+        it("Returns null if password doesn't suits given username.", async () => {
+            try {
+                const mockUser = await createMockUser();
+                const insertedId = await UserRecord.insertUser(mockUser);
+                const user = await UserRecord.login(mockUser.username, "TestPassword13123!");
+                await expect(user).toBeNull();
+                await UserRecord.deleteUserById(insertedId);
+            } catch (err) {
+                throw new Error(err);
             }
         });
     });
