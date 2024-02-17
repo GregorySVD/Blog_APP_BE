@@ -2,6 +2,7 @@ import {ObjectId} from "mongodb";
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
 import {emailValidator, passwordValidator, usernameValidator} from "../utils/user.validation/user.validation";
+import * as bcrypt from 'bcryptjs';
 
 
 export class UserRecord implements UserEntity {
@@ -41,6 +42,7 @@ export class UserRecord implements UserEntity {
             throw new Error("Cannot update user password.");
         }
     }
+
     async updateIsAdminStatus(): Promise<void> {
         try {
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {isAdmin: !this.isAdmin}});
@@ -57,7 +59,6 @@ export class UserRecord implements UserEntity {
         }
     }
 
-
     static async insertUser(newUser: UserEntity): Promise<string> {
         try {
             // Check if user already exists
@@ -65,7 +66,12 @@ export class UserRecord implements UserEntity {
             await emailValidator(newUser.email);
             await passwordValidator(newUser.password);
 
-            new UserRecord({
+            //Hashing the password
+            const salt = await bcrypt.genSalt(10);
+            newUser.password = await bcrypt.hash(newUser.password, salt);
+
+
+            await new UserRecord({
                 _id: new ObjectId(),
                 username: newUser.username,
                 email: newUser.email,
@@ -130,6 +136,28 @@ export class UserRecord implements UserEntity {
 
 //-----------------------------------------------------------
 
+    static async getUserByUsername(username: string): Promise<UserEntity | null> {
+        try {
+            const foundedUser = await usersDB.findOne({"username": username});
+            if (!foundedUser) return null;
+
+            return new UserRecord({
+                _id: foundedUser._id,
+                username: foundedUser.username,
+                password: foundedUser.password,
+                email: foundedUser.email,
+                createdAt: foundedUser.createdAt,
+                updatedAt: foundedUser.updatedAt,
+                isAdmin: foundedUser.isAdmin,
+            } as UserRecord);
+
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
+    //-----------------------------------------------------------
+
     static async deleteUserById(userId: string): Promise<boolean> {
         try {
             const userObjectId = new ObjectId(userId);
@@ -161,5 +189,9 @@ export class UserRecord implements UserEntity {
             throw new Error(err);
         }
     }
+
+    // static async login(username: string, password: string): Promise<UserEntity | null> {
+    //
+    // }
 
 }

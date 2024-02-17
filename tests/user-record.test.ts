@@ -39,7 +39,7 @@ describe("Can insert and validate new user", () => {
     it("Can insert new user", async () => {
         const insertedUserId = await insertMockUser();
         await expect(insertedUserId).toBeDefined();
-        await deleteMockUserFromDataBase(insertedUserId);
+        // await deleteMockUserFromDataBase(insertedUserId);
     });
 
     // USER VALIDATION
@@ -101,15 +101,13 @@ describe("findAllUsers", () => {
 
 //----------------------------------------------------------------
 
-describe("Find user by id returns User Entity or null", () => {
+describe("Find user by id returns UserEntity or null", () => {
     it("Can find single user record by _id", async () => {
         const mockUser = createMockUser();
         const insertedUserId = await UserRecord.insertUser(mockUser);
         const user = await UserRecord.getUserById(insertedUserId);
-        await expect(user).toEqual(expect.objectContaining<UserEntity | null>(user));
-        if (user != null) {
-            await UserRecord.deleteUserById(insertedUserId);
-        }
+        await expect(user).toEqual(expect.objectContaining<UserEntity>(user));
+        await UserRecord.deleteUserById(insertedUserId);
     })
     it("Not founded user returns null", async () => {
         const foundedUser = await UserRecord.getUserById("65b15b6973947f0159b8ad22");
@@ -117,6 +115,20 @@ describe("Find user by id returns User Entity or null", () => {
     });
 
 })
+describe("Find user by username returns null or UserRecord", () => {
+    it("Can find user by username", async () => {
+        const mockUser = createMockUser();
+        const insertedUserId = await UserRecord.insertUser(mockUser);
+        const user = await UserRecord.getUserByUsername(mockUser.username);
+        await expect(user).toEqual(expect.objectContaining<UserEntity>(user));
+        await UserRecord.deleteUserById(insertedUserId);
+    });
+    it("Not founded user returns null", async () => {
+        const foundedUser = await UserRecord.getUserByUsername("65b15b6973947f0159b8ad22");
+        await expect(foundedUser).toBeNull();
+    });
+})
+
 
 //----------------------------------------------------------------
 describe("Can delete a user by given id", () => {
