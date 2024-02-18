@@ -286,6 +286,4 @@ describe("Can update and validate password", () => {
             }
         });
     });
-
-
 });

@@ -4,6 +4,7 @@ import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
 import {emailValidator, passwordValidator, usernameValidator} from "../utils/user.validation/user.validation";
 import {SALT} from "../utils/crypto";
+import {ValidationError} from "../utils/errorHandler";
 
 
 export class UserRecord implements UserEntity {
@@ -37,12 +38,11 @@ export class UserRecord implements UserEntity {
                 console.log("User password updated successfully");
                 this.password = newPassword;
             } else {
-                new Error("User not found or password not updated");
+                new ValidationError("User not found or password not updated");
             }
             this.updatedAt = new Date();
-
         } catch (err) {
-            throw new Error("Cannot update user password.");
+            throw new ValidationError("Cannot update user password.");
         }
     }
 
@@ -53,12 +53,12 @@ export class UserRecord implements UserEntity {
                 console.log("User password updated successfully");
                 this.isAdmin = !this.isAdmin;
             } else {
-                new Error("User not found or password not updated");
+                new ValidationError("User not found or password not updated");
             }
             this.updatedAt = new Date();
 
         } catch (err) {
-            throw new Error("Cannot update user password.");
+            throw new ValidationError("Cannot update user password. Try again later");
         }
     }
 
@@ -108,7 +108,7 @@ export class UserRecord implements UserEntity {
                 isAdmin: user.isAdmin,
             }));
         } catch (err) {
-            throw new Error(err);
+            throw new Error("Can't find users");
         }
     }
 
@@ -131,7 +131,7 @@ export class UserRecord implements UserEntity {
             } as UserRecord);
 
         } catch (err) {
-            throw new Error(err);
+            throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
 
@@ -153,7 +153,7 @@ export class UserRecord implements UserEntity {
             } as UserRecord);
 
         } catch (err) {
-            throw new Error(err);
+            throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
 
@@ -168,10 +168,9 @@ export class UserRecord implements UserEntity {
                 console.log(`User with ID ${userId} deleted successfully`);
                 return true;
             }
-            await console.log(`User with ID ${userId} not found`);
             return false;
         } catch (err) {
-            throw new Error(err);
+            throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
 
@@ -186,7 +185,7 @@ export class UserRecord implements UserEntity {
             }
             await console.log("Users deleted successfully!");
         } catch (err) {
-            throw new Error(err);
+            throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
 
@@ -201,9 +200,8 @@ export class UserRecord implements UserEntity {
                 return user;
             }
             return null;
-
         } catch (err) {
-            throw new Error(err);
+            throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
 
