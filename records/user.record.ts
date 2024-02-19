@@ -95,10 +95,12 @@ export class UserRecord implements UserEntity {
 
 //-----------------------------------------------------------
 
-    static async ListAllUsers(): Promise<UserEntity[]> {
+    static async ListAllUsers(): Promise<UserEntity[] | [] | any> {
         try {
-            const allUsers = await usersDB.find().toArray();
-            return allUsers.map((user) => new UserRecord({
+            const allUsers = await usersDB.find();
+            const foundUsers = allUsers.filter((user: UserEntity) => user);
+
+            const userRecords = foundUsers.map((user) => new UserRecord({
                 _id: user._id,
                 username: user.username,
                 password: user.password,
@@ -106,7 +108,11 @@ export class UserRecord implements UserEntity {
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
                 isAdmin: user.isAdmin,
-            }));
+            }) as UserEntity);
+
+            console.log("Found users:", foundUsers);
+
+            return userRecords;
         } catch (err) {
             throw new Error("Can't find users");
         }
