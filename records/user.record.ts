@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import { ObjectId} from "mongodb";
 import * as bcrypt from "bcryptjs";
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
@@ -35,7 +35,6 @@ export class UserRecord implements UserEntity {
 
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: hashedNewPassword}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
-                console.log("User password updated successfully");
                 this.password = newPassword;
             } else {
                 new ValidationError("User not found or password not updated");
@@ -50,7 +49,6 @@ export class UserRecord implements UserEntity {
         try {
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {isAdmin: !this.isAdmin}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
-                console.log("User password updated successfully");
                 this.isAdmin = !this.isAdmin;
             } else {
                 new ValidationError("User not found or password not updated");
@@ -62,29 +60,28 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    static async insertUser(newUser: UserEntity): Promise<string> {
+    async insertUser(): Promise<string> {
         try {
             // Check if user already exists
-            await usernameValidator(newUser.username);
-            await emailValidator(newUser.email);
-            await passwordValidator(newUser.password);
+            await usernameValidator(this.username);
+            await emailValidator(this.email);
+            await passwordValidator(this.password);
 
             //Hashing the password
-            newUser.password = await bcrypt.hash(newUser.password, SALT);
+            this.password = await bcrypt.hash(this.password, SALT);
 
-            await new UserRecord({
+            const user = await new UserRecord({
                 _id: new ObjectId(),
-                username: newUser.username,
-                email: newUser.email,
-                password: newUser.password,
+                username: this.username,
+                email: this.email,
+                password: this.password,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 isAdmin: false,
             });
 
-            const insertResult = await usersDB.insertOne(newUser);
+            const insertResult = await usersDB.insertOne(user);
             const insertedId = insertResult.insertedId.toString();
-            console.log("User inserted:", insertedId);
 
             return String(insertedId);
 
@@ -95,12 +92,15 @@ export class UserRecord implements UserEntity {
 
 //-----------------------------------------------------------
 
-    static async ListAllUsers(): Promise<UserEntity[] | [] | any> {
+    static async ListAllUsers(): Promise<UserEntity[]> {
         try {
-            const allUsers = await usersDB.find();
-            const foundUsers = allUsers.filter((user: UserEntity) => user);
+            const allUsersCursor = await usersDB.find();
+            const allUsersArray = await allUsersCursor.toArray();
+            if(!allUsersArray || allUsersArray.length === 0) {
+                return [];
+            }
 
-            const userRecords = foundUsers.map((user) => new UserRecord({
+            return allUsersArray.map((user) => new UserRecord({
                 _id: user._id,
                 username: user.username,
                 password: user.password,
@@ -110,11 +110,8 @@ export class UserRecord implements UserEntity {
                 isAdmin: user.isAdmin,
             }) as UserEntity);
 
-            console.log("Found users:", foundUsers);
-
-            return userRecords;
         } catch (err) {
-            throw new Error("Can't find users");
+            throw new Error("Can't find users: " + err.message);
         }
     }
 
@@ -170,11 +167,8 @@ export class UserRecord implements UserEntity {
             const userObjectId = new ObjectId(userId);
             const result = await usersDB.deleteOne({"_id": userObjectId});
 
-            if (result.deletedCount === 1) {
-                console.log(`User with ID ${userId} deleted successfully`);
-                return true;
-            }
-            return false;
+            return result.deletedCount === 1;
+
         } catch (err) {
             throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
@@ -183,14 +177,15 @@ export class UserRecord implements UserEntity {
     static async deleteAllUsers(): Promise<void> {
         try {
             const allUsers = await UserRecord.ListAllUsers();
-            if (allUsers.length === 0) {
+            if (!allUsers || allUsers.length === 0) {
                 return;
+            } else {
+                for (const user of allUsers) {
+                    await UserRecord.deleteUserById(String(user._id));
+                }
             }
-            for (const user of allUsers) {
-                await UserRecord.deleteUserById(String(user._id));
-            }
-            await console.log("Users deleted successfully!");
         } catch (err) {
+            console.error("Error deleting all users:", err);
             throw new ValidationError("An unexpected error occurred. Please try again later.");
         }
     }
