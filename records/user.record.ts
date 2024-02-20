@@ -1,4 +1,4 @@
-import { ObjectId} from "mongodb";
+import {ObjectId} from "mongodb";
 import * as bcrypt from "bcryptjs";
 import {UserEntity} from "../types";
 import {usersDB} from "../utils/mongodb";
@@ -28,7 +28,7 @@ export class UserRecord implements UserEntity {
 
 //-----------------------------------------------------------
 
-    async updatePassword(newPassword: string): Promise<void> {
+    async updatePassword(newPassword: string): Promise<boolean> {
         try {
             await passwordValidator(newPassword);
             const hashedNewPassword = await bcrypt.hash(newPassword, SALT);
@@ -36,12 +36,13 @@ export class UserRecord implements UserEntity {
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: hashedNewPassword}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
                 this.password = newPassword;
+                return true;
             } else {
                 new ValidationError("User not found or password not updated");
             }
             this.updatedAt = new Date();
         } catch (err) {
-            throw new ValidationError("Cannot update user password.");
+            throw new ValidationError("Cannot update user password. " + err.message);
         }
     }
 
@@ -96,7 +97,7 @@ export class UserRecord implements UserEntity {
         try {
             const allUsersCursor = await usersDB.find();
             const allUsersArray = await allUsersCursor.toArray();
-            if(!allUsersArray || allUsersArray.length === 0) {
+            if (!allUsersArray || allUsersArray.length === 0) {
                 return [];
             }
 
@@ -131,10 +132,9 @@ export class UserRecord implements UserEntity {
                 createdAt: foundedUser.createdAt,
                 updatedAt: foundedUser.updatedAt,
                 isAdmin: foundedUser.isAdmin,
-            } as UserRecord);
-
+            });
         } catch (err) {
-            throw new ValidationError("An unexpected error occurred. Please try again later.");
+            throw new ValidationError(`User with id: ${userId} not found`);
         }
     }
 
@@ -156,7 +156,7 @@ export class UserRecord implements UserEntity {
             } as UserRecord);
 
         } catch (err) {
-            throw new ValidationError("An unexpected error occurred. Please try again later.");
+            throw new ValidationError(`User with username: ${username} not found`);
         }
     }
 
@@ -166,11 +166,9 @@ export class UserRecord implements UserEntity {
         try {
             const userObjectId = new ObjectId(userId);
             const result = await usersDB.deleteOne({"_id": userObjectId});
-
             return result.deletedCount === 1;
-
         } catch (err) {
-            throw new ValidationError("An unexpected error occurred. Please try again later.");
+            throw new ValidationError(`User with id: ${userId} not found. Please try again later or check if user id is correct.`);
         }
     }
 
