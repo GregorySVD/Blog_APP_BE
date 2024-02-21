@@ -1,7 +1,5 @@
 import {ObjectId} from "mongodb";
 
-
-
 export interface UserEntity {
     _id?: ObjectId;
     username: string;
@@ -9,7 +7,5 @@ export interface UserEntity {
     email: string;
     createdAt?: Date;
     updatedAt?: Date;
+    isAdmin?: boolean;
 }
-
-// export interface UserEntityDocument extends UserEntity, Document {}
-// export interface UserEntityModel extends Model<UserEntityDocument> {}
