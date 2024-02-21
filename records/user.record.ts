@@ -46,11 +46,12 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    async updateIsAdminStatus(): Promise<void> {
+    async updateIsAdminStatus(): Promise<boolean> {
         try {
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {isAdmin: !this.isAdmin}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
                 this.isAdmin = !this.isAdmin;
+                return true;
             } else {
                 new ValidationError("User not found or password not updated");
             }

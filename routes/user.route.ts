@@ -23,7 +23,7 @@ userRouter
             const result = await UserRecord.ListAllUsers();
             res.json(result);
         } catch (err) {
-            throw new ValidationError("List of users cannot be found, please try again later.");
+            throw new ValidationError(err.message);
         }
     })
 
@@ -79,8 +79,8 @@ userRouter
         }
     })
 
-    // PATCH route to update user password by ID
-    .patch("/password/:id", async (req, res) => {
+    // PUT route to update user password by ID
+    .put("/password/:id", async (req, res) => {
         try {
             const user = await UserRecord.getUserById(req.params.id);
             if (!user) {
@@ -93,5 +93,21 @@ userRouter
             console.error(err);
             throw new ValidationError(err.message);
         }
-    });
-//TODO create routes to patch admin status
+    })
+    // PATCH route to update user isAdmin status
+    .patch("/admin/:id", async (req, res) => {
+        try {
+            const user = await UserRecord.getUserById(req.params.id);
+            if (!user) {
+                return res.status(404).json({message: 'User not found'});
+            }
+            const userRecord = await new UserRecord(user);
+            const result = await userRecord.updateIsAdminStatus();
+            if(result) {
+                await res.status(200).json({message: 'User updated successfully!',
+                isAdmin: !user.isAdmin});
+            }
+        } catch (err) {
+            throw new ValidationError(err.message);
+        }
+    })
