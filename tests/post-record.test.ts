@@ -10,6 +10,7 @@ function createMockPost(): PostEntity {
         content: "This is test content of post number" + random,
     };
 }
+//@TODO: use eslint
 describe('PostRecord', () => {
     it('should create a PostRecord object with default values', () => {
         const mockPostData = createMockPost();

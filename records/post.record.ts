@@ -31,6 +31,6 @@ export class PostRecord implements PostEntity {
         if (!obj.image) {
             this.image = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png"
         }
-
+//@TODO: use eslint and create CRUDE methods like: insert new post, find all posts...
     }
 }
