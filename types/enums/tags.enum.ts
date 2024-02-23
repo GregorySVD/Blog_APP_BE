@@ -4,5 +4,5 @@ export enum Tags {
     Podroze = "Podroze",
     Kodowanie = "Kodowanie",
     Uczelnia = "Uczelnia",
-    Inne = "Inne",
+    Newsy = "Newsy",
 }

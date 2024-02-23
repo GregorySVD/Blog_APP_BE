@@ -135,7 +135,7 @@ export class UserRecord implements UserEntity {
                 isAdmin: foundedUser.isAdmin,
             });
         } catch (err) {
-            throw new ValidationError(`User with id: ${userId} not found`);
+            throw new ValidationError(`User with id: ${userId} not found.`);
         }
     }
 

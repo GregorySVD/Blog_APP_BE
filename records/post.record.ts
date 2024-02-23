@@ -1,5 +1,7 @@
 import {PostEntity, Tags} from "../types";
 import {ObjectId} from "mongodb";
+import {postsDB} from "../utils/mongodb";
+import {ValidationError} from "../utils/errorHandler";
 
 export class PostRecord implements PostEntity {
     _id: ObjectId;
@@ -11,8 +13,14 @@ export class PostRecord implements PostEntity {
     tags?: Tags[];
     count_likes?: number;
 
-
     constructor(obj: PostEntity) {
+        if (!obj.title || obj.title.length < 3 || obj.title.length > 150) {
+            throw new ValidationError("Title has to be between 3 and 150 characters long");
+        }
+        if (!obj.content || obj.content.length < 10) {
+            throw new ValidationError("Content has to be more then 9 characters long");
+        }
+
         this._id = obj._id ? new ObjectId(obj._id) : new ObjectId();
         this.content = obj.content;
         this.title = obj.title;
@@ -26,11 +34,52 @@ export class PostRecord implements PostEntity {
             this.count_likes = 0
         }
         if (!obj.tags) {
-            this.tags = [];
+            this.tags = [Tags.Newsy];
         }
         if (!obj.image) {
             this.image = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png"
         }
 //@TODO: use eslint and create CRUDE methods like: insert new post, find all posts...
+    }
+
+    async insertOne(): Promise<string> {
+        try {
+            const post = await new PostRecord({
+                _id: new ObjectId(),
+                content: this.content,
+                title: this.title,
+                updatedAt: this.updatedAt,
+                image: this.image,
+                tags: this.tags,
+                createdAt: this.createdAt,
+                count_likes: this.count_likes,
+            });
+            await postsDB.insertOne(post);
+            return this._id.toString();
+        } catch (err) {
+            throw new ValidationError("Cannot insert task. Try again later" + err.message);
+        }
+    }
+
+    static async getOne(postId: ObjectId): Promise<PostEntity | null> {
+        try {
+
+            const foundedPost = await postsDB.findOne({"_id": postId});
+            if (!foundedPost) return null;
+
+            return new PostRecord({
+                _id: foundedPost._id,
+                count_likes: foundedPost.count_likes,
+                title: foundedPost.title,
+                content: foundedPost.content,
+                tags: foundedPost.tags,
+                image: foundedPost.image,
+                createdAt: foundedPost.createdAt,
+                updatedAt: foundedPost.updatedAt,
+            })
+
+        } catch (err) {
+            throw new ValidationError(`Post with id: ${postId} not found.`);
+        }
     }
 }
