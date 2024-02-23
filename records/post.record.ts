@@ -2,6 +2,7 @@ import {PostEntity, Tags} from "../types";
 import {ObjectId} from "mongodb";
 import {postsDB} from "../utils/mongodb";
 import {ValidationError} from "../utils/errorHandler";
+import {changeToObjectId} from "../utils/changeToObjectId";
 
 export class PostRecord implements PostEntity {
     _id: ObjectId;
@@ -45,7 +46,7 @@ export class PostRecord implements PostEntity {
     async insertOne(): Promise<string> {
         try {
             const post = await new PostRecord({
-                _id: new ObjectId(),
+                _id: this._id,
                 content: this.content,
                 title: this.title,
                 updatedAt: this.updatedAt,
@@ -61,10 +62,9 @@ export class PostRecord implements PostEntity {
         }
     }
 
-    static async getOne(postId: ObjectId): Promise<PostEntity | null> {
+    static async getOne(postId: string): Promise<PostRecord | null> {
         try {
-
-            const foundedPost = await postsDB.findOne({"_id": postId});
+            const foundedPost = await postsDB.findOne({"_id": changeToObjectId(postId)});
             if (!foundedPost) return null;
 
             return new PostRecord({
@@ -76,10 +76,13 @@ export class PostRecord implements PostEntity {
                 image: foundedPost.image,
                 createdAt: foundedPost.createdAt,
                 updatedAt: foundedPost.updatedAt,
-            })
+            });
 
         } catch (err) {
-            throw new ValidationError(`Post with id: ${postId} not found.`);
+            if (err.message.includes('Post with id')) {
+                return null;
+            }
+            throw new ValidationError(`An error occurred while fetching the post: ${err.message}`);
         }
     }
 }
