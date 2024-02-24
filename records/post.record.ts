@@ -1,5 +1,5 @@
-import {PostEntity, Tags} from "../types";
 import {ObjectId} from "mongodb";
+import {PostEntity, Tags} from "../types";
 import {postsDB} from "../utils/mongodb";
 import {ValidationError} from "../utils/errorHandler";
 import {changeToObjectId} from "../utils/changeToObjectId";
@@ -16,10 +16,10 @@ export class PostRecord implements PostEntity {
 
     constructor(obj: PostEntity) {
         if (!obj.title || obj.title.length < 3 || obj.title.length > 150) {
-            throw new ValidationError("Title has to be between 3 and 150 characters long");
+            throw new ValidationError("Title has to be between 3 and 150 characters long.");
         }
         if (!obj.content || obj.content.length < 10) {
-            throw new ValidationError("Content has to be more then 9 characters long");
+            throw new ValidationError("Content has to be more then 9 characters long.");
         }
 
         this._id = obj._id ? new ObjectId(obj._id) : new ObjectId();
@@ -32,15 +32,14 @@ export class PostRecord implements PostEntity {
         this.updatedAt = new Date();
 
         if (!obj.count_likes) {
-            this.count_likes = 0
+            this.count_likes = 0;
         }
         if (!obj.tags) {
             this.tags = [Tags.Newsy];
         }
         if (!obj.image) {
-            this.image = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png"
+            this.image = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png";
         }
-//@TODO: use eslint and create CRUDE methods like: insert new post, find all posts...
     }
 
     async insertOne(): Promise<string> {
@@ -58,7 +57,16 @@ export class PostRecord implements PostEntity {
             await postsDB.insertOne(post);
             return this._id.toString();
         } catch (err) {
-            throw new ValidationError("Cannot insert task. Try again later" + err.message);
+            throw new ValidationError(`Cannot insert task. Try again later. ${err.message}`);
+        }
+    }
+
+    static async deletePost(postId: string): Promise<boolean> {
+        try {
+            const result = await postsDB.deleteOne({"_id": changeToObjectId(postId)});
+            return result.deletedCount === 1;
+        } catch (err) {
+            throw new ValidationError(`Cannot delete this post. Try again later. ${err.message}`);
         }
     }
 
@@ -79,7 +87,7 @@ export class PostRecord implements PostEntity {
             });
 
         } catch (err) {
-            if (err.message.includes('Post with id')) {
+            if (err.message.includes("Post with id")) {
                 return null;
             }
             throw new ValidationError(`An error occurred while fetching the post: ${err.message}`);

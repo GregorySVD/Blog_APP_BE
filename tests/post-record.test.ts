@@ -33,21 +33,21 @@ describe("Inserting a new post", () => {
     it("should insert a new post", async () => {
         const mockPost = createMockPost();
         const postRecord = new PostRecord(mockPost);
-        const postId = await postRecord.insertOne();
+        const insertedMockId = await postRecord.insertOne();
 
-        expect(typeof postId).toBe("string");
+        expect(typeof insertedMockId).toBe("string");
+        await PostRecord.deletePost(insertedMockId);
     });
     it("should throw an error if insertion fails", async () => {
-        try {
+        try{
             const mockPostData = createMockPost();
-            mockPostData.content = null;
+            mockPostData.content = "short";
             const postRecord = new PostRecord(mockPostData);
-
-            await postRecord.insertOne();
-
-            await expect(postRecord.insertOne()).rejects.toThrow();
+            await expect(postRecord.insertOne()).rejects.toThrow("Content has to be more then 9 characters long");
         } catch (err) {
+
         }
+
     });
 });
 describe("Getting a post by ID", () => {
@@ -62,7 +62,7 @@ describe("Getting a post by ID", () => {
         expect(post).toBeInstanceOf(PostRecord);
         expect(post.title).toEqual(mockPostData.title);
         expect(post.content).toEqual(mockPostData.content);
-
+        await PostRecord.deletePost(insertedMockId);
     });
 
     it("should return null if post is not found", async () => {
@@ -72,5 +72,24 @@ describe("Getting a post by ID", () => {
 
     it("should throw an error if an exception occurs", async () => {
         await expect(PostRecord.getOne("ghajsf")).rejects.toThrow();
+    });
+});
+describe("Deleting a post by ID", () => {
+    it("should delete a post by ID", async () => {
+        const mockPostData = createMockPost();
+        const postRecord = new PostRecord(mockPostData);
+        const insertedMockId = await postRecord.insertOne();
+        await PostRecord.deletePost(insertedMockId);
+        const deletedPost = await PostRecord.getOne(insertedMockId);
+        expect(deletedPost).toBeNull();
+    });
+
+    it("should return null if the post to be deleted doesn't exist", async () => {
+        const deletedPostId = "65d8d1493fab60a4fa77a994"; // Non-existing ID
+        const result = await PostRecord.deletePost(deletedPostId);
+        const deletedPost = await PostRecord.getOne(deletedPostId);
+
+        expect(deletedPost).toBeNull();
+        expect(result).toBeFalsy();
     });
 });
