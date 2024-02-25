@@ -39,7 +39,7 @@ describe("Inserting a new post", () => {
         await PostRecord.deletePost(insertedMockId);
     });
     it("should throw an error if insertion fails", async () => {
-        try{
+        try {
             const mockPostData = createMockPost();
             mockPostData.content = "short";
             const postRecord = new PostRecord(mockPostData);
@@ -91,5 +91,17 @@ describe("Deleting a post by ID", () => {
 
         expect(deletedPost).toBeNull();
         expect(result).toBeFalsy();
+    });
+
+    describe("getPostsList method", () => {
+        it("getPostsList retrieves posts correctly", async () => {
+            const posts = await PostRecord.getPostsList();
+            expect(posts).toBeInstanceOf(Array);
+            expect(posts.length).toBeDefined();
+
+            posts.forEach((post) => {
+                expect(post).toBeInstanceOf(PostRecord);
+            })
+        })
     });
 });

@@ -92,5 +92,25 @@ export class PostRecord implements PostEntity {
             }
             throw new ValidationError(`An error occurred while fetching the post: ${err.message}`);
         }
+
+    }
+
+    static async getPostsList(): Promise<PostEntity[] | []> {
+        const postsArray = await postsDB.find().toArray();
+
+        if (!postsArray || postsArray.length === 0) {
+            return [];
+        }
+
+        return postsArray.map((post) => new PostRecord({
+            _id: post._id,
+            content: post.content,
+            title: post.title,
+            updatedAt: post.updatedAt,
+            image: post.image,
+            tags: post.tags,
+            createdAt: post.createdAt,
+            count_likes: post.count_likes,
+        }) as PostRecord);
     }
 }
