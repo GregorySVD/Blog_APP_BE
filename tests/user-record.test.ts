@@ -18,7 +18,7 @@ function createMockUser(): UserEntity {
 
 export async function insertMockUser(): Promise<string> {
     const mockUser = createMockUser();
-    const user = new UserRecord(mockUser)
+    const user = new UserRecord(mockUser);
     return user.insertUser();
 }
 

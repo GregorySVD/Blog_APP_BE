@@ -1,6 +1,8 @@
 import {PostEntity} from "../types";
 
 import {PostRecord} from "../records/post.record";
+import {validatePostContent, validatePostTitle} from "../utils/post.validation/post.validation";
+import {ValidationError} from "../utils/errorHandler";
 
 
 function createMockPost(): PostEntity {
@@ -11,10 +13,10 @@ function createMockPost(): PostEntity {
     };
 }
 
-async function insertNewPost(): Promise<string> {
+async function insertMockPost(): Promise<string> {
     const mockPostData = createMockPost();
     const postRecord = new PostRecord(mockPostData);
-    return await postRecord.insertOne();
+    return postRecord.insertOne();
 }
 
 describe("PostRecord", () => {
@@ -107,18 +109,18 @@ describe("Deleting a post by ID", () => {
 
             posts.forEach((post) => {
                 expect(post).toBeInstanceOf(PostRecord);
-            })
-        })
+            });
+        });
     });
     describe("PostRecord.count_likes can be updated", () => {
         it("should return incremented value of likesCounter", async () => {
-            const insertedId = await insertNewPost();
+            const insertedId = await insertMockPost();
             const postRecord = await PostRecord.getOne(insertedId);
             await postRecord.incrementLikesCount();
             expect(postRecord.likesCounter).toBe(1);
         });
         it("Throws error if likesCounter < 0", async () => {
-            const insertedId = await insertNewPost();
+            const insertedId = await insertMockPost();
             const postRecord = await PostRecord.getOne(insertedId);
             await expect(postRecord.decrementLikesCount()).rejects.toThrow();
         });
@@ -130,5 +132,58 @@ describe("Deleting a post by ID", () => {
             expect(postRecord.likesCounter).toBe(0);
         });
 
-    })
+    });
+
+    describe("Validation Functions", () => {
+        it("validatePostTitle throws error for empty title", async () => {
+            expect(() => validatePostTitle("")).toThrowError(ValidationError);
+        });
+        it("validatePostTitle throws error for title too short", async () => {
+            expect(() => validatePostTitle("short")).toThrowError();
+        });
+        it("validatePostTitle accepts valid title within limits", async () => {
+            expect(() => validatePostTitle("A good title length")).not.toThrowError();
+        });
+        it("validatePostContent throws error for empty content", async () => {
+            expect(() => validatePostContent("")).toThrowError(ValidationError);
+        });
+        it("validatePostContent throws error for content too short", async () => {
+            expect(() => validatePostContent("short")).toThrowError(ValidationError);
+        });
+        it("validatePostContent accepts valid content within limits", async () => {
+            expect(() => validatePostContent("This is a good length of content for a post")).not.toThrowError();
+        });
+    });
+
+    describe("updateTitle method", () => {
+        it("updates the title and returns true", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+            const insertedMockId = await postRecord.insertOne();
+
+            const newTitle = "New and Improved Title";
+            await expect(postRecord.updateTitle(newTitle)).resolves.toBe(true);
+
+            const updatedPost = await PostRecord.getOne(insertedMockId);
+            expect(updatedPost.title).toBe(newTitle);
+
+            await PostRecord.deletePost(insertedMockId);
+        });
+
+        it("throws an error if validation fails", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+            const insertedMockId = await postRecord.insertOne();
+
+            const invalidTitle = "";
+            await expect(postRecord.updateTitle(invalidTitle)).rejects.toThrowError(
+                "Error updating title: Title has to be between 8 and 255 characters long."
+            );
+
+            const updatedPost = await PostRecord.getOne(insertedMockId);
+            expect(updatedPost.title).not.toBe(invalidTitle);
+
+            await PostRecord.deletePost(insertedMockId);
+        });
+    });
 });

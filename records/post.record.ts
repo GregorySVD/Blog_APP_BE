@@ -3,6 +3,7 @@ import {PostEntity, Tags} from "../types";
 import {postsDB} from "../utils/mongodb";
 import {ValidationError} from "../utils/errorHandler";
 import {changeToObjectId} from "../utils/changeToObjectId";
+import {validatePostContent, validatePostTitle} from "../utils/post.validation/post.validation";
 
 export class PostRecord implements PostEntity {
     _id: ObjectId;
@@ -15,12 +16,8 @@ export class PostRecord implements PostEntity {
     likesCounter?: number;
 
     constructor(obj: PostEntity) {
-        if (!obj.title || obj.title.length < 3 || obj.title.length > 150) {
-            throw new ValidationError("Title has to be between 3 and 150 characters long.");
-        }
-        if (!obj.content || obj.content.length < 10) {
-            throw new ValidationError("Content has to be more then 9 characters long.");
-        }
+        validatePostTitle(obj.title);
+        validatePostContent(obj.content);
         if (obj.likesCounter < 0) {
             throw new ValidationError("Likes must be positive number!");
         }
@@ -45,6 +42,19 @@ export class PostRecord implements PostEntity {
         }
     }
 
+    async updateTitle(title: string): Promise<boolean> {
+        try {
+            validatePostTitle(title);
+            this.title = title;
+            await postsDB.updateOne({_id: this._id}, {$set: {title}});
+            this.updatedAt = new Date();
+            return true;
+        } catch (err) {
+            throw new ValidationError(`Error updating title: ${err.message}`);
+        }
+    }
+    //@TODO: create method to update content of post
+
     async insertOne(): Promise<string> {
         try {
             const post = await new PostRecord({
@@ -67,14 +77,14 @@ export class PostRecord implements PostEntity {
     async incrementLikesCount(): Promise<number> {
         return ++this.likesCounter;
     }
+
     async decrementLikesCount(): Promise<number> {
-        --this.likesCounter
-        if(this.likesCounter < 0 ) {
-            throw new ValidationError('Likes should be positive number!');
+        --this.likesCounter;
+        if (this.likesCounter < 0) {
+            throw new ValidationError("Likes should be positive number!");
         }
         return this.likesCounter;
     }
-
 
     static async deletePost(postId: string): Promise<boolean> {
         try {

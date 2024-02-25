@@ -36,13 +36,13 @@ export class UserRecord implements UserEntity {
             const updateResult = await usersDB.updateOne({_id: this._id}, {$set: {password: hashedNewPassword}});
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
                 this.password = newPassword;
-                return true;
             } else {
                 new ValidationError("User not found or password not updated");
             }
             this.updatedAt = new Date();
+            return true;
         } catch (err) {
-            throw new ValidationError("Cannot update user password. " + err.message);
+            throw new ValidationError(`Cannot update user password. ${err.message}`);
         }
     }
 
@@ -52,9 +52,9 @@ export class UserRecord implements UserEntity {
             if (updateResult.matchedCount === 1 && updateResult.modifiedCount === 1) {
                 this.isAdmin = !this.isAdmin;
                 return true;
-            } else {
-                new ValidationError("User not found or password not updated");
             }
+            new ValidationError("User not found or password not updated");
+
             this.updatedAt = new Date();
 
         } catch (err) {
@@ -69,7 +69,7 @@ export class UserRecord implements UserEntity {
             await emailValidator(this.email);
             await passwordValidator(this.password);
 
-            //Hashing the password
+            // Hashing the password
             this.password = await bcrypt.hash(this.password, SALT);
 
             const user = await new UserRecord({
@@ -113,7 +113,7 @@ export class UserRecord implements UserEntity {
             }) as UserEntity);
 
         } catch (err) {
-            throw new Error("Can't find users: " + err.message);
+            throw new Error(`Can't find users: ${err.message}`);
         }
     }
 
@@ -173,16 +173,17 @@ export class UserRecord implements UserEntity {
         }
     }
 
-    static async deleteAllUsers(): Promise<void> {
+    static async deleteAllUsers(): Promise<boolean> {
         try {
             const allUsers = await UserRecord.ListAllUsers();
             if (!allUsers || allUsers.length === 0) {
-                return;
-            } else {
-                for (const user of allUsers) {
-                    await UserRecord.deleteUserById(String(user._id));
-                }
+                return false;
             }
+            for (const user of allUsers) {
+                await UserRecord.deleteUserById(String(user._id));
+
+            }
+            return true;
         } catch (err) {
             console.error("Error deleting all users:", err);
             throw new ValidationError("An unexpected error occurred. Please try again later.");

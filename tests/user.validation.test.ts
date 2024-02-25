@@ -20,7 +20,7 @@ describe("User validation", () => {
                 ];
 
                 for (const email of validEmails) {
-                    expect(await emailValidator("john.doe@example.com")).toBe(true);
+                    expect(await emailValidator(email)).toBe(true);
                 }
             });
 
@@ -33,7 +33,8 @@ describe("User validation", () => {
                 ];
 
                 for (const email of invalidEmails) {
-                    await expect(emailValidator(email)).rejects.toThrowError("Please enter a valid email address. Double-check for typos and make sure it includes: a username, an '@' symbol, and a domain name (e.g., example@gmail.com).");
+                    await expect(emailValidator(email)).rejects.toThrowError("Please enter a valid email address." +
+                        " Double-check for typos and make sure it includes: a username, an '@' symbol, and a domain name (e.g., example@gmail.com).");
                 }
             });
 
@@ -41,7 +42,7 @@ describe("User validation", () => {
                 await expect(emailValidator("")).rejects.toThrow("Invalid email: Email cannot be empty");
             });
             it("should throw an error for too long email", async () => {
-                const longEmail = `${"a".repeat(255)  }@example.com`;
+                const longEmail = `${"a".repeat(255)}@example.com`;
 
                 await expect(emailValidator(longEmail)).rejects.toThrow(`Invalid email: Must be between ${userConfig.EMAIL.minlength} and ${userConfig.EMAIL.maxlength} characters long`);
             });
@@ -75,7 +76,6 @@ describe("User validation", () => {
                     "12345678",
                     "nospecialchars",
                 ];
-
                 for (const password of weakPasswords) {
                     await expect(passwordValidator(password)).rejects.toThrow(
                         "Invalid password: Must contain at least one uppercase letter, lowercase letter, number, and special character"
