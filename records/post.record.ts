@@ -12,7 +12,7 @@ export class PostRecord implements PostEntity {
     createdAt?: Date;
     updatedAt?: Date;
     tags?: Tags[];
-    count_likes?: number;
+    likesCounter?: number;
 
     constructor(obj: PostEntity) {
         if (!obj.title || obj.title.length < 3 || obj.title.length > 150) {
@@ -21,18 +21,21 @@ export class PostRecord implements PostEntity {
         if (!obj.content || obj.content.length < 10) {
             throw new ValidationError("Content has to be more then 9 characters long.");
         }
+        if (obj.likesCounter < 0) {
+            throw new ValidationError("Likes must be positive number!");
+        }
 
         this._id = obj._id ? new ObjectId(obj._id) : new ObjectId();
         this.content = obj.content;
         this.title = obj.title;
         this.image = obj.image;
         this.tags = obj.tags;
-        this.count_likes = obj.count_likes;
+        this.likesCounter = obj.likesCounter;
         this.createdAt = new Date();
         this.updatedAt = new Date();
 
-        if (!obj.count_likes) {
-            this.count_likes = 0;
+        if (!obj.likesCounter) {
+            this.likesCounter = 0;
         }
         if (!obj.tags) {
             this.tags = [Tags.Newsy];
@@ -52,7 +55,7 @@ export class PostRecord implements PostEntity {
                 image: this.image,
                 tags: this.tags,
                 createdAt: this.createdAt,
-                count_likes: this.count_likes,
+                likesCounter: this.likesCounter,
             });
             await postsDB.insertOne(post);
             return this._id.toString();
@@ -60,6 +63,18 @@ export class PostRecord implements PostEntity {
             throw new ValidationError(`Cannot insert task. Try again later. ${err.message}`);
         }
     }
+
+    async incrementLikesCount(): Promise<number> {
+        return ++this.likesCounter;
+    }
+    async decrementLikesCount(): Promise<number> {
+        --this.likesCounter
+        if(this.likesCounter < 0 ) {
+            throw new ValidationError('Likes should be positive number!');
+        }
+        return this.likesCounter;
+    }
+
 
     static async deletePost(postId: string): Promise<boolean> {
         try {
@@ -77,7 +92,7 @@ export class PostRecord implements PostEntity {
 
             return new PostRecord({
                 _id: foundedPost._id,
-                count_likes: foundedPost.count_likes,
+                likesCounter: foundedPost.count_likes,
                 title: foundedPost.title,
                 content: foundedPost.content,
                 tags: foundedPost.tags,
@@ -110,7 +125,7 @@ export class PostRecord implements PostEntity {
             image: post.image,
             tags: post.tags,
             createdAt: post.createdAt,
-            count_likes: post.count_likes,
+            likesCounter: post.count_likes,
         }) as PostRecord);
     }
 }

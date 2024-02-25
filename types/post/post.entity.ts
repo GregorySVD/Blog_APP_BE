@@ -9,5 +9,5 @@ export interface PostEntity {
     createdAt?: Date;
     updatedAt?: Date;
     tags?: Tags[];
-    count_likes?: number;
+    likesCounter?: number;
 }

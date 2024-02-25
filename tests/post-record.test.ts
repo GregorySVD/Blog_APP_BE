@@ -11,6 +11,12 @@ function createMockPost(): PostEntity {
     };
 }
 
+async function insertNewPost(): Promise<string> {
+    const mockPostData = createMockPost();
+    const postRecord = new PostRecord(mockPostData);
+    return await postRecord.insertOne();
+}
+
 describe("PostRecord", () => {
     it("should create a PostRecord object with default values", () => {
         const mockPostData = createMockPost();
@@ -25,7 +31,7 @@ describe("PostRecord", () => {
         expect(postRecord.createdAt).toBeDefined();
         expect(postRecord.updatedAt).toBeDefined();
         expect(postRecord.tags).toBeDefined();
-        expect(postRecord.count_likes).toBeDefined();
+        expect(postRecord.likesCounter).toBeDefined();
         console.log(postRecord);
     });
 });
@@ -104,4 +110,25 @@ describe("Deleting a post by ID", () => {
             })
         })
     });
+    describe("PostRecord.count_likes can be updated", () => {
+        it("should return incremented value of likesCounter", async () => {
+            const insertedId = await insertNewPost();
+            const postRecord = await PostRecord.getOne(insertedId);
+            await postRecord.incrementLikesCount();
+            expect(postRecord.likesCounter).toBe(1);
+        });
+        it("Throws error if likesCounter < 0", async () => {
+            const insertedId = await insertNewPost();
+            const postRecord = await PostRecord.getOne(insertedId);
+            await expect(postRecord.decrementLikesCount()).rejects.toThrow();
+        });
+        it("should return decrement value of count_likes", async () => {
+            const mockPost = createMockPost();
+            mockPost.likesCounter = 1;
+            const postRecord = new PostRecord(mockPost);
+            await postRecord.decrementLikesCount();
+            expect(postRecord.likesCounter).toBe(0);
+        });
+
+    })
 });
