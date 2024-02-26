@@ -5,7 +5,7 @@ export interface PostEntity {
     _id?: ObjectId;
     title: string,
     content: string,
-    image?: string,
+    imageUrl?: string,
     createdAt?: Date;
     updatedAt?: Date;
     tags?: Tags[];

@@ -9,7 +9,7 @@ export class PostRecord implements PostEntity {
     _id: ObjectId;
     content: string;
     title: string;
-    image: string;
+    imageUrl: string;
     createdAt?: Date;
     updatedAt?: Date;
     tags?: Tags[];
@@ -25,7 +25,7 @@ export class PostRecord implements PostEntity {
         this._id = obj._id ? new ObjectId(obj._id) : new ObjectId();
         this.content = obj.content;
         this.title = obj.title;
-        this.image = obj.image;
+        this.imageUrl = obj.imageUrl;
         this.tags = obj.tags;
         this.likesCounter = obj.likesCounter;
         this.createdAt = new Date();
@@ -37,8 +37,8 @@ export class PostRecord implements PostEntity {
         if (!obj.tags) {
             this.tags = [Tags.Newsy];
         }
-        if (!obj.image) {
-            this.image = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png";
+        if (!obj.imageUrl) {
+            this.imageUrl = "https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/how-to-write-a-blog-post.png";
         }
     }
 
@@ -53,7 +53,34 @@ export class PostRecord implements PostEntity {
             throw new ValidationError(`Error updating title: ${err.message}`);
         }
     }
-    //@TODO: create method to update content of post
+
+    async updateContent(content: string) {
+        try {
+            validatePostContent(content);
+            this.title = content;
+            await postsDB.updateOne({_id: this._id}, {$set: {content}});
+            this.updatedAt = new Date();
+            return true;
+        } catch (err) {
+            throw new ValidationError(`Error updating content: ${err.message}`);
+        }
+    }
+
+    async updateImage(imageUrl: string) {
+        if (!imageUrl) {
+            throw new ValidationError(`Wrong image URL.`);
+        }
+        try {
+            this.imageUrl = imageUrl;
+            await postsDB.updateOne({_id: this._id}, {$set: {imageUrl}});
+            this.updatedAt = new Date();
+            return true;
+        } catch (err) {
+            throw new ValidationError(`Error updating image: ${err.message}.`);
+        }
+    }
+
+    //@TODO: Create method to update Tags.
 
     async insertOne(): Promise<string> {
         try {
@@ -62,7 +89,7 @@ export class PostRecord implements PostEntity {
                 content: this.content,
                 title: this.title,
                 updatedAt: this.updatedAt,
-                image: this.image,
+                imageUrl: this.imageUrl,
                 tags: this.tags,
                 createdAt: this.createdAt,
                 likesCounter: this.likesCounter,
@@ -106,7 +133,7 @@ export class PostRecord implements PostEntity {
                 title: foundedPost.title,
                 content: foundedPost.content,
                 tags: foundedPost.tags,
-                image: foundedPost.image,
+                imageUrl: foundedPost.image,
                 createdAt: foundedPost.createdAt,
                 updatedAt: foundedPost.updatedAt,
             });
@@ -132,7 +159,7 @@ export class PostRecord implements PostEntity {
             content: post.content,
             title: post.title,
             updatedAt: post.updatedAt,
-            image: post.image,
+            imageUrl: post.image,
             tags: post.tags,
             createdAt: post.createdAt,
             likesCounter: post.count_likes,

@@ -29,7 +29,7 @@ describe("PostRecord", () => {
         expect(postRecord._id).toBeDefined();
         expect(postRecord.content).toBe(mockPostData.content);
         expect(postRecord.title).toBe(mockPostData.title);
-        expect(postRecord.image).toBeDefined();
+        expect(postRecord.imageUrl).toBeDefined();
         expect(postRecord.createdAt).toBeDefined();
         expect(postRecord.updatedAt).toBeDefined();
         expect(postRecord.tags).toBeDefined();
@@ -184,6 +184,61 @@ describe("Deleting a post by ID", () => {
             expect(updatedPost.title).not.toBe(invalidTitle);
 
             await PostRecord.deletePost(insertedMockId);
+        });
+    });
+    describe("updateContent method", () => {
+        it("updates the content and returns true", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+            const insertedMockId = await postRecord.insertOne();
+
+            const newContent = "This is the updated content.";
+            await expect(postRecord.updateContent(newContent)).resolves.toBe(true);
+
+            const updatedPost = await PostRecord.getOne(insertedMockId);
+            expect(updatedPost.content).toBe(newContent);
+
+            await PostRecord.deletePost(insertedMockId);
+        });
+
+        it("throws an error if validation fails", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+            const insertedMockId = await postRecord.insertOne();
+
+            const invalidContent = "";
+            await expect(postRecord.updateContent(invalidContent)).rejects.toThrowError(
+                "Error updating content: Content has to be between 10 and 2200 characters long."
+            );
+
+            const updatedPost = await PostRecord.getOne(insertedMockId);
+            expect(updatedPost.content).not.toBe(invalidContent);
+            await PostRecord.deletePost(insertedMockId);
+        });
+    });
+
+    describe("updateImage method", () => {
+        it("updates the image and returns true", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+            const insertedMockId = await postRecord.insertOne();
+
+            const insertedPost = await PostRecord.getOne(insertedMockId);
+            const newImageUrl = "https://example.com/new-image.jpg";
+            await insertedPost.updateImage(newImageUrl);
+            await console.log(insertedPost.imageUrl);
+            await expect(insertedPost.imageUrl).toBe(newImageUrl);
+            await PostRecord.deletePost(insertedMockId);
+        });
+
+        it("throws an error if the image URL is empty", async () => {
+            const mockPost = createMockPost();
+            const postRecord = new PostRecord(mockPost);
+
+            const invalidImageUrl = "";
+            await expect(postRecord.updateImage(invalidImageUrl)).rejects.toThrowError(
+                "Wrong image URL."
+            );
         });
     });
 });
