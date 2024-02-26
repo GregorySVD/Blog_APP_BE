@@ -9,11 +9,11 @@ userRouter
     // POST route to create a new user
     .post("/", async (req, res) => {
         try {
-            const newUsers = new UserRecord(req.body);
-            const insertedUserId = await newUsers.insertUser();
+            const newUser = new UserRecord(req.body);
+            const insertedUserId = await newUser.insertUser();
             res.json({message: `User with id: ${insertedUserId} inserted successfully!`});
         } catch (err) {
-            throw new ValidationError("Could not insert user into database, please try again later.");
+            throw new ValidationError(`Error while inserting new user: ${err.message}`);
         }
     })
 
