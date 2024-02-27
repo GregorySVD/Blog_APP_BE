@@ -28,9 +28,15 @@ export class PostRecord implements PostEntity {
         this.imageUrl = obj.imageUrl;
         this.tags = obj.tags;
         this.likesCounter = obj.likesCounter;
-        this.createdAt = new Date();
-        this.updatedAt = new Date();
+        this.createdAt = obj.createdAt ? new Date(obj.createdAt) : new Date();
+        this.updatedAt = obj.updatedAt ? new Date(obj.updatedAt) : new Date();
 
+        if (!obj.createdAt) {
+            this.createdAt = new Date();
+        }
+        if (!obj.updatedAt) {
+            this.updatedAt = new Date();
+        }
         if (!obj.likesCounter) {
             this.likesCounter = 0;
         }
@@ -70,6 +76,12 @@ export class PostRecord implements PostEntity {
         if (!imageUrl) {
             throw new ValidationError(`Wrong image URL.`);
         }
+        const imageUrlRegex = /^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.(jpg|jpeg|png|gif|bmp)$/;
+
+        if (!imageUrlRegex.test(imageUrl)) {
+            throw new ValidationError(`Invalid image URL format.`);
+        }
+
         try {
             this.imageUrl = imageUrl;
             await postsDB.updateOne({_id: this._id}, {$set: {imageUrl}});
@@ -101,16 +113,28 @@ export class PostRecord implements PostEntity {
         }
     }
 
+    //@TODO: Fix incrementLikesCount method, it only increment local value. Value in database stays the same.
     async incrementLikesCount(): Promise<number> {
-        return ++this.likesCounter;
+        try {
+            this.likesCounter++;
+            await postsDB.updateOne({_id: this._id}, {$inc: {likesCounter: 1}});
+            return this.likesCounter;
+        } catch (err) {
+            throw new ValidationError(`Cannot increment likes count. ${err.message}`);
+        }
     }
 
+    //@TODO: Fix decrementLikesCount method, it only increment local value. Value in database stays the same.
     async decrementLikesCount(): Promise<number> {
-        --this.likesCounter;
-        if (this.likesCounter < 0) {
-            throw new ValidationError("Likes should be positive number!");
+        try {
+            if (this.likesCounter < 0) {
+                new ValidationError("Likes should be positive number!");
+            }
+            await postsDB.updateOne({_id: this._id}, {$set: {likesCounter: this.likesCounter}});
+            return this.likesCounter;
+        } catch (err) {
+            throw new ValidationError(`Cannot decrement likes count. ${err.message}`);
         }
-        return this.likesCounter;
     }
 
     static async deletePost(postId: string): Promise<boolean> {

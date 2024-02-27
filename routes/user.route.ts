@@ -95,7 +95,7 @@ userRouter
         }
     })
     // PATCH route to update user isAdmin status
-    .patch("/admin/:id", async (req, res) => {
+    .put("/admin/:id", async (req, res) => {
         try {
             const user = await UserRecord.getUserById(req.params.id);
             if (!user) {
