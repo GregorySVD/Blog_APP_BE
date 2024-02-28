@@ -4,5 +4,6 @@ export const homeRoute = Router();
 
 homeRoute
     .get("/", async (req: Request, res: Response) => {
-    res.redirect("/user")
+        res.redirect("/post");
+
     })
