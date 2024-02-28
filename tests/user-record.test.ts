@@ -18,7 +18,7 @@ function createMockUser(): UserEntity {
 
 export async function insertMockUser(): Promise<string> {
     const mockUser = createMockUser();
-    const user = new UserRecord(mockUser)
+    const user = new UserRecord(mockUser);
     return user.insertUser();
 }
 
@@ -181,7 +181,7 @@ describe("Can update and validate password", () => {
         try {
             await userRecord.updatePassword("aaa");
         } catch (error) {
-            expect(error.message).toBe("Cannot update user password.");
+            expect(error.message).toBe("Cannot update user password. Invalid password: Must be between 7 and 128 characters long");
         } finally {
             await deleteMockUserFromDataBase(insertedUserId);
         }
@@ -198,7 +198,7 @@ describe("Can update and validate password", () => {
         try {
             await userRecord.updatePassword("");
         } catch (error) {
-            expect(error.message).toBe("Cannot update user password.");
+            expect(error.message).toBe("Cannot update user password. Invalid password: Password cannot be empty");
         } finally {
             await deleteMockUserFromDataBase(insertedUserId);
         }
