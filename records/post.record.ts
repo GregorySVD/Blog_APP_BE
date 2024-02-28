@@ -27,7 +27,7 @@ export class PostRecord implements PostEntity {
         this.title = obj.title;
         this.imageUrl = obj.imageUrl;
         this.tags = obj.tags;
-        this.likesCounter = obj.likesCounter;
+        this.likesCounter = obj.likesCounter ? obj.likesCounter : 0;
         this.createdAt = obj.createdAt ? new Date(obj.createdAt) : new Date();
         this.updatedAt = obj.updatedAt ? new Date(obj.updatedAt) : new Date();
 
@@ -36,9 +36,6 @@ export class PostRecord implements PostEntity {
         }
         if (!obj.updatedAt) {
             this.updatedAt = new Date();
-        }
-        if (!obj.likesCounter) {
-            this.likesCounter = 0;
         }
         if (!obj.tags) {
             this.tags = [Tags.Newsy];
@@ -74,12 +71,12 @@ export class PostRecord implements PostEntity {
 
     async updateImage(imageUrl: string) {
         if (!imageUrl) {
-            throw new ValidationError(`Wrong image URL.`);
+            throw new ValidationError("Wrong image URL.");
         }
         const imageUrlRegex = /^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*\.(jpg|jpeg|png|gif|bmp)$/;
 
         if (!imageUrlRegex.test(imageUrl)) {
-            throw new ValidationError(`Invalid image URL format.`);
+            throw new ValidationError("Invalid image URL format.");
         }
 
         try {
@@ -92,8 +89,7 @@ export class PostRecord implements PostEntity {
         }
     }
 
-    //@TODO: Create method to update Tags.
-
+    // @TODO: Create method to update Tags.
     async insertOne(): Promise<string> {
         try {
             const post = await new PostRecord({
@@ -113,25 +109,24 @@ export class PostRecord implements PostEntity {
         }
     }
 
-    //@TODO: Fix incrementLikesCount method, it only increment local value. Value in database stays the same.
-    async incrementLikesCount(): Promise<number> {
+    async incrementLikesCount(): Promise<boolean> {
         try {
-            this.likesCounter++;
+            this.likesCounter = (this.likesCounter || 0) + 1;
             await postsDB.updateOne({_id: this._id}, {$inc: {likesCounter: 1}});
-            return this.likesCounter;
+            return true;
         } catch (err) {
             throw new ValidationError(`Cannot increment likes count. ${err.message}`);
         }
     }
 
-    //@TODO: Fix decrementLikesCount method, it only increment local value. Value in database stays the same.
-    async decrementLikesCount(): Promise<number> {
+    async decrementLikesCount(): Promise<boolean> {
         try {
             if (this.likesCounter < 0) {
                 new ValidationError("Likes should be positive number!");
             }
-            await postsDB.updateOne({_id: this._id}, {$set: {likesCounter: this.likesCounter}});
-            return this.likesCounter;
+            this.likesCounter = (this.likesCounter || 0) - 1;
+            await postsDB.updateOne({_id: this._id}, {$inc: {likesCounter: -1}});
+            return true;
         } catch (err) {
             throw new ValidationError(`Cannot decrement likes count. ${err.message}`);
         }
@@ -153,7 +148,7 @@ export class PostRecord implements PostEntity {
 
             return new PostRecord({
                 _id: foundedPost._id,
-                likesCounter: foundedPost.count_likes,
+                likesCounter: foundedPost.likesCounter,
                 title: foundedPost.title,
                 content: foundedPost.content,
                 tags: foundedPost.tags,
@@ -161,7 +156,6 @@ export class PostRecord implements PostEntity {
                 createdAt: foundedPost.createdAt,
                 updatedAt: foundedPost.updatedAt,
             });
-
         } catch (err) {
             if (err.message.includes("Post with id")) {
                 return null;

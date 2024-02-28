@@ -1,4 +1,4 @@
-import {Router, Response, Request} from "express"
+import {Router, Response, Request} from "express";
 import {ValidationError} from "../utils/errorHandler";
 import {PostRecord} from "../records/post.record";
 
@@ -14,7 +14,7 @@ postRoute
             throw new ValidationError(err.message);
         }
     })
-    //POST route to insert new Post
+    // POST route to insert new Post
     .post("/", async (req: Request, res: Response) => {
         try {
             const newPost = new PostRecord(req.body);
@@ -50,7 +50,6 @@ postRoute
             throw new ValidationError(`Error while deleting post: ${err.message}`);
         }
     })
-
     // PUT route to update post title
     .put("/title/:id", async (req: Request, res: Response) => {
         try {
@@ -64,7 +63,6 @@ postRoute
             throw new ValidationError(`Error while updating post title: ${err.message}`);
         }
     })
-
     // PUT route to update post content
     .put("/content/:id", async (req: Request, res: Response) => {
         try {
@@ -78,7 +76,6 @@ postRoute
             throw new ValidationError(`Error while updating post content: ${err.message}`);
         }
     })
-
     // PUT route to update post image
     .put("/image/:id", async (req: Request, res: Response) => {
         try {
@@ -92,16 +89,30 @@ postRoute
             throw new ValidationError(`Error while updating post image: ${err.message}`);
         }
     })
-//@TODO: Create routes to increment and decrement likesCouter
-// .put("/increment-likes/:id", async (req: Request, res: Response) => {
-//     try {
-//         const post = await PostRecord.getOne(req.params.id);
-//         if (!post) {
-//             res.status(404).json({error: `Post with id ${req.params.id} does not exist`});
-//         }
-//         const result = await post.incrementLikesCount();
-//         res.json(result);
-//     } catch (err) {
-//         throw new ValidationError(`Error while incrementing post likes ${err}`);
-//     }
-// })
+    // PUT route to increment post likes count
+    .put("/increment-likes/:id", async (req: Request, res: Response) => {
+        try {
+            const post = await PostRecord.getOne(req.params.id);
+            if (!post) {
+                res.status(404).json({error: `Post with id ${req.params.id} does not exist`});
+            }
+            const result = await post.incrementLikesCount();
+            res.json(result);
+        } catch (err) {
+            throw new ValidationError(`Error while incrementing post likes ${err}`);
+        }
+    })
+    // PUT route to decrement post likes count
+    .put("/decrement-likes/:id", async (req: Request, res: Response) => {
+        try {
+            const post = await PostRecord.getOne(req.params.id);
+            if (!post) {
+                res.status(404).json({error: `Post with id ${req.params.id} does not exist`});
+            }
+            const result = await post.decrementLikesCount();
+            await console.log(post.likesCounter);
+            res.json(result);
+        } catch (err) {
+            throw new ValidationError(`Error while incrementing post likes ${err}`);
+        }
+    });
