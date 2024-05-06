@@ -183,4 +183,28 @@ export class PostRecord implements PostEntity {
             likesCounter: post.count_likes,
         }) as PostRecord);
     }
+
+    static async getPostsPaginationList(page: number = 1, pageSize: number = 12): Promise<PostEntity[] | []> {
+        const totalPosts = (await postsDB.find().toArray()).length;
+        const pageCount = Math.ceil(totalPosts / pageSize);
+
+        if (page < 1 || page > pageCount) {
+            throw new ValidationError(`Invalid page number: ${page}`);
+        }
+
+        const skip = (page - 1) * pageSize;
+        const cursor = postsDB.find({}, {skip, limit: pageSize})
+        const posts = await cursor.toArray();
+
+        return posts.map((post) => new PostRecord({
+            _id: post._id,
+            content: post.content,
+            title: post.title,
+            updatedAt: post.updatedAt,
+            imageUrl: post.image,
+            tags: post.tags,
+            createdAt: post.createdAt,
+            likesCounter: post.count_likes,
+        }) as PostRecord);
+    }
 }
