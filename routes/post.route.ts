@@ -5,15 +5,23 @@ import {PostRecord} from "../records/post.record";
 export const postRoute = Router();
 
 postRoute
-    // GET route to retrieve list of Post
+    //GET route to retrieve portion of list of posts
     .get("/", async (req: Request, res: Response) => {
         try {
-            const result = await PostRecord.getPostsList();
-            res.json(result);
+            const page: number = Number(req.query.page || 1);
+            const pageSize: number = Number(req.query.pageSize) || 12;
+            const posts = await PostRecord.getPostsPaginationList(page, pageSize);
+
+            res.json({
+                posts,
+                currentPage: page,
+                pageCount: Math.ceil(((await PostRecord.getPostsList()).length) / pageSize)
+            });
         } catch (err) {
             throw new ValidationError(err.message);
         }
     })
+
     // POST route to insert new Post
     .post("/", async (req: Request, res: Response) => {
         try {
