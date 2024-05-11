@@ -35,14 +35,14 @@ postRoute
     // GET route to retrieve single Post
     .get("/:id", async (req: Request, res: Response) => {
         try {
-            const result = await PostRecord.getOne(req.params.id);
-            if (!result) {
+            const result = await PostRecord.getOne(req.params.id)
+            if(!result) {
                 res.status(404).json({error: `Post with id ${req.params.id} does not exist`});
             } else {
-                res.json(result);
+                await res.json(result);
             }
         } catch (err) {
-            throw new ValidationError(`Error getting user: ${err.message}`);
+            res.json({error: err.message});
         }
     })
     // DELETE route to delete single Post by id
